@@ -5,7 +5,7 @@
 [![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Data%20%26%20Weights-ffc107?labelColor=yellow)](https://huggingface.co/huuuuuuuuu/InfiniteDance)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-> **Status**: 🚧 **Repository under active development.** We are continuously adding more data and features.
+> **Status**: 🚧 **Repository under active development.** We are continuously adding more data and features. More data and features are coming soon!
 
 
 
