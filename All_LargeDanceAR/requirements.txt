@@ -1,0 +1,31 @@
+# Requirements for All_LargeDanceAR module
+# These are included in the root requirements.txt but provided here for convenience
+
+torch==2.1.0
+torchaudio==2.1.0
+transformers==4.46.3
+accelerate==1.0.1
+einops==0.8.1
+tqdm==4.67.1
+numpy==1.23.5
+scipy==1.10.1
+mamba-ssm==2.2.2
+flash-attn==2.5.6
+huggingface-hub==0.23.0
+pyyaml==6.0.2
+tensorboardX==2.6.2.2
+librosa==0.7.2
+soundfile==0.12.1
+smplx==0.1.28
+chumpy==0.70
+opencv-python-headless==4.12.0.88
+moviepy==1.0.3
+imageio-ffmpeg==0.5.1
+jsonargparse[signatures]>=4.15.2
+fairseq
+pesq
+torchcrepe
+encodec==0.1.1
+yacs==0.1.8
+roma==1.5.4
+nnaudio==0.3.3

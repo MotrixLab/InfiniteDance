@@ -1,0 +1,81 @@
+# InfiniteDance: Unified Requirements File
+# Based on conda environment 'dance' and project codebase
+
+# Core ML Framework
+torch==2.1.0
+torchvision==0.16.0
+torchaudio==2.1.0
+pytorch-lightning==2.4.0
+
+# LLM & Transformers (LLaMA support)
+transformers==4.46.3
+accelerate==1.0.1
+tokenizers==0.20.3
+huggingface-hub==0.23.0
+sentencepiece
+tiktoken
+
+# Specialized Model Components
+mamba-ssm==2.2.2  # Required for MoE Bridge modules
+flash-attn==2.5.6
+xformers==0.0.19
+ninja
+triton==2.1.0
+
+# 3D Human Motion & SMPL
+smplx==0.1.28
+chumpy==0.70
+# pytorch3d  # Recommended install: conda install pytorch3d -c pytorch3d
+
+# Audio & Music Processing (WavTokenizer support)
+librosa==0.7.2
+soundfile==0.12.1
+nnaudio==0.3.3
+pesq
+torchcrepe
+encodec==0.1.1
+fairseq
+resampy==0.3.1
+audioread==3.0.1
+
+# Computer Vision & Image/Video Processing
+opencv-python==4.12.0.88
+opencv-python-headless==4.12.0.88
+matplotlib==3.7.5
+moviepy==1.0.3
+imageio==2.35.1
+imageio-ffmpeg==0.5.1
+scikit-image==0.21.0
+
+# Data Science & Utilities
+numpy==1.23.5
+scipy==1.10.1
+pandas==2.0.3
+einops==0.8.1
+tqdm==4.67.1
+pyyaml==6.0.2
+packaging==25.0
+requests==2.32.4
+urllib3==2.2.3
+certifi
+idna
+charset-normalizer
+yacs==0.1.8
+easydict==1.13
+roma==1.5.4
+jsonargparse[signatures]>=4.15.2
+joblib==1.4.2
+scikit-learn==1.3.2
+ftfy
+iopath
+python-magic
+jsonlines
+
+# Logging & Visualization
+tensorboard==2.14.0
+tensorboardX==2.6.2.2
+wandb==0.15.0
+plotly
+ipython
+ipywidgets
+jupyterlab

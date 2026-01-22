@@ -1,0 +1,36 @@
+# 用于训练retrieval music 55 <--> 22*3 body joints
+NAME: InterCLIP_AudioJoints
+NUM_LAYERS: 8
+NUM_HEADS: 8
+DROPOUT: 0.1
+INPUT_DIM: 258
+LATENT_DIM: 1024
+FF_SIZE: 2048
+ACTIVATION: gelu
+
+MOTION_REP: global
+FINETUNE: False
+
+TransEncoder:
+  max_seq_len: 600
+  input_feats: 264          
+  latent_dim: 256
+  num_heads: 4
+  ff_size: 1024
+  num_layers: 4
+  dropout: 0.2
+  output_var: False
+  zero_output: False      # 原来为True
+  cls_token: True
+
+CondEncoder:
+  max_seq_len: 600
+  input_feats: 55          # 55+ 22*3
+  latent_dim: 256
+  num_heads: 4
+  ff_size: 1024
+  num_layers: 4
+  dropout: 0.2
+  output_var: False
+  zero_output: False      # 原来为True
+  cls_token: True

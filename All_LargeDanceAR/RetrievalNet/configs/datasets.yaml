@@ -1,0 +1,15 @@
+largedance:
+    NAME: largedance
+    face_dir: '/data2/lrh/dataset/largedance/ourdata_smplx_pro/face'
+    audio_dir: '/data2/lrh/dataset/largedance/allmusic_librosa55'
+    motion_dir: '/data1/hzy/HumanMotion/All_mofea/alldata_new_joint_vecs264'
+    meta_paths: '/data2/lrh/dataset/largedance/Dataset_Split/alldata_s120_l120.json'
+    split: train
+
+largedance_test:
+    NAME: largedance
+    face_dir: '/data2/lrh/dataset/largedance/ourdata_smplx_pro/face'
+    audio_dir: '/data2/lrh/dataset/largedance/allmusic_librosa55'
+    motion_dir: '/data1/hzy/HumanMotion/All_mofea/alldata_new_joint_vecs264'
+    meta_paths: '/data2/lrh/dataset/largedance/Dataset_Split/alldata_s120_l120.json'
+    split: test

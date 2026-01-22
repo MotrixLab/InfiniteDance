@@ -1,0 +1,87 @@
+interhuman:
+    NAME: interhuman_h5
+    DATA_ROOT: /data2/lrh/dataset/HHI/InterHuman/
+    MOTION_REP: global
+    MODE: train
+
+    init_mode: leader
+    genmode: double
+    normdir: /data2/lrh/dataset/HHI/InterHuman/double/preprocessed/initedleader/ori_feature0120/wctc_j10cm_v2cm_norm3388
+    represent: 709 
+    useh5: True
+    CACHE: True
+    donorm: False
+
+    text_dir: /data2/lrh/dataset/HHI/InterHuman/annots/
+    clip_text: /data2/lrh/dataset/HHI/InterHuman/cliptext/
+    split: /data2/lrh/dataset/HHI/InterHuman/split/
+
+    double:         # person1 is leader
+      initedleader: /data2/lrh/dataset/HHI/InterHuman/double/preprocessed/initedleader/inited_data710/
+      initedleader_smplx: /data2/lrh/dataset/HHI/InterHuman/double/preprocessed/initedleader/inited_data  
+      initedleader_fea: /data2/lrh/dataset/HHI/InterHuman/double/preprocessed/initedleader/ori_feature0111/wctc_j10cm_v2cm
+      initedleader_h5: /home/lrh/data/InterHuman/double/preprocessed/initedleader/ori_feature0120/wctc_j10cm_v2cm.h5
+    
+      initedleader_long: /data2/lrh/dataset/HHI/InterHuman/double/preprocessed301/initedleader/split_longmo/inited_data710/
+      initedleader_long_smplx: /data2/lrh/dataset/HHI/InterHuman/double/preprocessed301/initedleader/split_longmo/inited_data
+      initedleader_long_fea: /data2/lrh/dataset/HHI/InterHuman/double/preprocessed301/initedleader/split_longmo/feature/wctc_j10cm_v2cm/
+      norm_leader: /data2/lrh/dataset/HHI/InterHuman/double/preprocessed/initedleader/feature/wctc_j10cm_v2cm_norm
+
+
+interhuman_val:
+    NAME: interhuman_h5
+    DATA_ROOT: /data2/lrh/dataset/HHI/InterHuman/
+    MOTION_REP: global
+    MODE: val
+
+    init_mode: leader
+    genmode: double
+    normdir: /data2/lrh/dataset/HHI/InterHuman/double/preprocessed/initedleader/ori_feature0120/wctc_j10cm_v2cm_norm3388
+    represent: 709
+    useh5: True
+    CACHE: True
+    donorm: False
+
+    text_dir: /data2/lrh/dataset/HHI/InterHuman/annots/
+    clip_text: /data2/lrh/dataset/HHI/InterHuman/cliptext/
+    split: /data2/lrh/dataset/HHI/InterHuman/split/
+
+    double:         # person1 is leader
+      initedleader: /data2/lrh/dataset/HHI/InterHuman/double/preprocessed/initedleader/inited_data710/
+      initedleader_smplx: /data2/lrh/dataset/HHI/InterHuman/double/preprocessed/initedleader/inited_data  
+      initedleader_fea: /data2/lrh/dataset/HHI/InterHuman/double/preprocessed/initedleader/ori_feature0111/wctc_j10cm_v2cm
+      initedleader_h5: /home/lrh/data/InterHuman/double/preprocessed/initedleader/ori_feature0120/wctc_j10cm_v2cm.h5
+    
+      initedleader_long: /data2/lrh/dataset/HHI/InterHuman/double/preprocessed301/initedleader/split_longmo/inited_data710/
+      initedleader_long_smplx: /data2/lrh/dataset/HHI/InterHuman/double/preprocessed301/initedleader/split_longmo/inited_data
+      initedleader_long_fea: /data2/lrh/dataset/HHI/InterHuman/double/preprocessed301/initedleader/split_longmo/feature/wctc_j10cm_v2cm/
+      norm_leader: /data2/lrh/dataset/HHI/InterHuman/double/preprocessed/initedleader/feature/wctc_j10cm_v2cm_norm
+
+interhuman_test:
+    NAME: interhuman_h5
+    DATA_ROOT: /data2/lrh/dataset/HHI/InterHuman/
+    MOTION_REP: global
+    MODE: test
+
+    init_mode: leader
+    genmode: double
+    normdir: /data2/lrh/dataset/HHI/InterHuman/double/preprocessed/initedleader/ori_feature0120/wctc_j10cm_v2cm_norm3388
+    represent: 709
+    useh5: True
+    CACHE: True
+    donorm: False
+
+    text_dir: /data2/lrh/dataset/HHI/InterHuman/annots/
+    clip_text: /data2/lrh/dataset/HHI/InterHuman/cliptext/
+    split: /data2/lrh/dataset/HHI/InterHuman/split/
+
+    double:         # person1 is leader
+      initedleader: /data2/lrh/dataset/HHI/InterHuman/double/preprocessed/initedleader/inited_data710/
+      initedleader_smplx: /data2/lrh/dataset/HHI/InterHuman/double/preprocessed/initedleader/inited_data  
+      initedleader_fea: /data2/lrh/dataset/HHI/InterHuman/double/preprocessed/initedleader/ori_feature0111/wctc_j10cm_v2cm
+      initedleader_h5: /home/lrh/data/InterHuman/double/preprocessed/initedleader/ori_feature0120/wctc_j10cm_v2cm.h5
+    
+      initedleader_long: /data2/lrh/dataset/HHI/InterHuman/double/preprocessed301/initedleader/split_longmo/inited_data710/
+      initedleader_long_smplx: /data2/lrh/dataset/HHI/InterHuman/double/preprocessed301/initedleader/split_longmo/inited_data
+      initedleader_long_fea: /data2/lrh/dataset/HHI/InterHuman/double/preprocessed301/initedleader/split_longmo/feature/wctc_j10cm_v2cm/
+      norm_leader: /data2/lrh/dataset/HHI/InterHuman/double/preprocessed/initedleader/feature/wctc_j10cm_v2cm_norm

@@ -1,0 +1,23 @@
+NAME: InterCLIP
+NUM_LAYERS: 8
+NUM_HEADS: 8
+DROPOUT: 0.1
+INPUT_DIM: 258
+LATENT_DIM: 1024
+FF_SIZE: 2048
+ACTIVATION: gelu
+
+MOTION_REP: global
+FINETUNE: False
+
+TransEncoder:
+  max_seq_len: 300
+  input_feats: 132          # 263 原始动作   132=66*2    516=258*2
+  latent_dim: 256
+  num_heads: 4
+  ff_size: 1024
+  num_layers: 4
+  dropout: 0
+  output_var: False
+  zero_output: False      # 原来为True
+  cls_token: True

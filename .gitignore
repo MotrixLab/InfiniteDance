@@ -1,0 +1,73 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# PyTorch
+*.pth
+*.pt
+*.ckpt
+*.tar
+
+# Data files
+*.npy
+*.npz
+*.pkl
+*.wav
+*.mp4
+*.mp3
+
+# Output directories
+output/
+checkpoints/*/model/
+checkpoints/*/eval/
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Large model files
+models/Llama3.2-1B/*.safetensors
+models/Llama3.2-1B/*.bin
+models/*.th
+*.ckpt
+
+# Data directories (keep structure, ignore content)
+InfiniteDanceData/dance/*
+InfiniteDanceData/music/*
+!InfiniteDanceData/dance/.gitkeep
+!InfiniteDanceData/music/.gitkeep
+!InfiniteDanceData/partition/.gitkeep
+!InfiniteDanceData/styles/.gitkeep
+
+# 强制忽略所有子目录下的这些后缀
+**/*.pt
+**/*.pth
+**/*.ckpt
+**/*.safetensors
+**/*.tar
+**/*.pth.tar
+**/output/
+**/checkpoints/
+**/models/
+**/*.json
+!**/config.json
+
+**/checkpoints/**/*.txt
+**/eval/*.txt

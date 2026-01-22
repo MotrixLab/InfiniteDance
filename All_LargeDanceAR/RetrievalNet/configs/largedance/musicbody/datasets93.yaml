@@ -1,0 +1,21 @@
+# 用于music和22个body joints的retrieval配置文件path
+largedance:
+    NAME: largedance_mb
+    audio_dir: '/data1/hzy/AllDataset/musicfeature_55_allmusic_pure'
+    mofea264_dir: '/data1/hzy/HumanMotion/All_mofea/alldata_new_joint_vecs264'
+    meta_paths: '/data1/hzy/HumanMotion/All_mofea/DataSet_Split/alldata_mbr_s100_l384.json'
+    split: train
+
+largedance_test:
+    NAME: largedance_mb
+    audio_dir: '/data1/hzy/AllDataset/musicfeature_55_allmusic_pure'
+    mofea264_dir: '/data1/hzy/HumanMotion/All_mofea/alldata_new_joint_vecs264'
+    meta_paths: '/data1/hzy/HumanMotion/All_mofea/DataSet_Split/alldata_mbr_s100_l384.json'
+    split: test
+
+largedance_all:
+    NAME: largedance_mb
+    audio_dir: '/data1/hzy/AllDataset/musicfeature_55_allmusic_pure'
+    mofea264_dir: '/data1/hzy/HumanMotion/All_mofea/alldata_new_joint_vecs264'
+    meta_paths: '/data1/hzy/HumanMotion/All_mofea/DataSet_Split/alldata_mbr_s100_l384.json'
+    split: all

@@ -1,0 +1,20 @@
+GENERAL:
+  EXP_NAME: AInterClip_Audio55Motion264/0930/train/bc256_s150l600_drop0.2_lr1e-4  # InterClip_all5_re1999_batch256x1
+  CHECKPOINT: ./checkpoints
+  LOG_DIR: ./log
+
+TRAIN:
+  LR: 1e-4
+  milestone_epoch: 500
+  WEIGHT_DECAY: 0.00002
+  BATCH_SIZE: 256    #
+  EPOCH: 1000
+  STEP: 1000000
+  LOG_STEPS: 40     # 20
+  SAVE_STEPS: 20000
+  SAVE_EPOCH: 50
+  RESUME: #
+  NUM_WORKERS: 2
+  MODE: finetune
+  LAST_EPOCH: 0
+  LAST_ITER: 0
