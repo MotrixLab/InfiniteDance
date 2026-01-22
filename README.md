@@ -52,7 +52,7 @@ InfiniteDance├── All_LargeDanceAR/              # Main LLM generation modu
 
 ```bash
 # Clone the repository
-git clone [https://github.com/MotrixLab/InfiniteDance](https://github.com/MotrixLab/InfiniteDance)
+git clone git@github.com:MotrixLab/InfiniteDance.git
 
 cd InfiniteDance
 
