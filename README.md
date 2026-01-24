@@ -21,8 +21,7 @@
 InfiniteDance├── All_LargeDanceAR/              # Main LLM generation module
 │   ├── models/                    # Model architectures and wrappers
 │   │   ├── checkpoints/           # VQVAE and other model weights
-│   │   ├── Llama3.2-1B/           # Base LLaMA model (Download from HF)
-│   │   └── WavTokenizer/          # Music encoder component
+│   │   └── Llama3.2-1B/           # Base LLaMA model (Download from HF)
 │   ├── RetrievalNet/              # Retrieval-Augmented Generation (RAG) network
 │   │   └── checkpoints/           # RetrievalNet pre-trained weights
 │   ├── output/                    # Training outputs and fine-tuned weights
