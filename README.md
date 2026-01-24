@@ -11,13 +11,7 @@
 
 ## 🚀 Overview
 
-**InfiniteDance** is a comprehensive framework for scalable 3D music-to-dance generation, designed for high-quality generalization in-the-wild. It utilizes a VQ-VAE-based motion encoder to discretize dance movements and a Large Language Model (LLaMA-3.2-1B) for high-fidelity autoregressive generation. By incorporating Retrieval-Augmented Generation (RAG), InfiniteDance achieves superior style consistency and motion diversity. Our motion VQ-VAE (DanceVQVAE) follows [MoMask](https://ericguo5513.github.io/momask/).
-
-### Key Features
-- **LLM-based Generation**: Leverages the power of LLaMA 3.2-1B for sophisticated dance sequence synthesis.
-- **RAG-Enhanced Conditioning**: Integrated Retrieval Network for precise style and motion guidance.
-- **Scalable Multimodal Architecture**: Supports diverse genres (Ballet, Popular, Latin, Modern, Folk, Classic).
-- **Production-Ready Pipeline**: From raw music features to high-quality SMPL-based video rendering.
+**InfiniteDance** is a comprehensive framework for scalable 3D music-to-dance generation, designed for high-quality generalization in-the-wild. 
 
 ---
 
