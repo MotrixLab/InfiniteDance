@@ -18,18 +18,8 @@
 ## 📂 Repository Structure
 
 ```text
-InfiniteDance├── All_LargeDanceAR/              # Main LLM generation module
-│   ├── models/                    # Model architectures and wrappers
-│   │   ├── checkpoints/           # VQVAE and other model weights
-│   │   └── Llama3.2-1B/           # Base LLaMA model (Download from HF)
-│   ├── RetrievalNet/              # Retrieval-Augmented Generation (RAG) network
-│   │   └── checkpoints/           # RetrievalNet pre-trained weights
-│   ├── output/                    # Training outputs and fine-tuned weights
-│   ├── utils/                     # Token-to-SMPL conversion and utilities
-│   ├── visualization/             # Rendering and video generation tools
-│   ├── train_infinitedance_start.py # Main training entry point
-│   ├── infer_llama_infinitedance.py # Main inference script
-│   └── infer.sh                   # All-in-one inference script
+InfiniteDance
+├── All_LargeDanceAR/              # Main generation module
 ├── DanceVQVAE/                    # VQ-VAE for motion quantization (follows MoMask)
 └── InfiniteDanceData/             # Dataset directory (Should be placed at root)
     ├── dance/                     # Motion tokens (.npy)
