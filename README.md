@@ -1,6 +1,6 @@
 # 💃💃InfiniteDance: Scalable 3D Dance Generation Towards in-the-wild Generalization💃💃
 
-[![arXiv](https://img.shields.io/badge/arXiv-Paper-b31b1b.svg)](https://arxiv.org)
+[![arXiv](https://img.shields.io/badge/arXiv-Paper-b31b1b.svg)](https://arxiv.org/abs/2603.13375)
 [![Project Page](https://img.shields.io/badge/Project-Homepage-008080?logo=googlechrome&logoColor=white)](https://infinitedance.github.io/#/)
 [![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Data%20%26%20Weights-ffc107?labelColor=yellow)](https://huggingface.co/huuuuuuuuu/InfiniteDance)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -178,11 +178,14 @@ python train_infinitedance_start.py \
 If you use this code or dataset in your research, please cite our work:
 
 ```bibtex
-@article{infinitedance2026,
-  title={InfiniteDance: Scalable 3D Dance Generation Towards in-the-wild Generalization},
-  author={...},
-  journal={arXiv},
-  year={2026}
+@misc{li2026infinitedancescalable3ddance,
+      title={InfiniteDance: Scalable 3D Dance Generation Towards in-the-wild Generalization}, 
+      author={Ronghui Li and Zhongyuan Hu and Li Siyao and Youliang Zhang and Haozhe Xie and Mingyuan Zhang and Jie Guo and Xiu Li and Ziwei Liu},
+      year={2026},
+      eprint={2603.13375},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2603.13375}, 
 }
 
 ```
