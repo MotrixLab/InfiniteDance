@@ -1017,6 +1017,51 @@ config_path = '/data2/hzy/InfiniteDance/All_LargeDanceAR/RetrievalNet/checkpoint
 device = 'cuda:4'
 
 # ==========================================
+# Excluded-name helpers (e.g. exclude AIST++ / FineDance from retrieval)
+# ==========================================
+
+DEFAULT_AISTPP_FINEDANCE_PARTITION_FILES = [
+    "/data2/hzy/InfiniteDance_opensource/InfiniteDanceData/partition/aistpp_train.txt",
+    "/data2/hzy/InfiniteDance_opensource/InfiniteDanceData/partition/aistpp_test.txt",
+    "/data2/hzy/InfiniteDance_opensource/InfiniteDanceData/partition/aistpp_eval.txt",
+    "/data2/hzy/InfiniteDance_opensource/InfiniteDanceData/partition/finedance_train.txt",
+    "/data2/hzy/InfiniteDance_opensource/InfiniteDanceData/partition/finedance_eval.txt",
+]
+
+
+def load_excluded_names_from_partitions(partition_files):
+    """Read partition .txt files and return a set of video_part names to exclude."""
+    excluded = set()
+    for fp in partition_files or []:
+        if not os.path.exists(fp):
+            print(f"Warning: partition file not found: {fp}")
+            continue
+        with open(fp) as f:
+            for line in f:
+                name = line.strip()
+                if name:
+                    excluded.add(name)
+    return excluded
+
+
+def _video_part(full_name: str) -> str:
+    """Extract the video portion of a retrieval entry name (the part before '@')."""
+    return full_name.rsplit('@', 1)[0] if '@' in full_name else full_name
+
+
+def _filter_excluded(items, exclude_names):
+    """Filter a list of dicts/strings by their video_part not in exclude_names."""
+    if not exclude_names:
+        return items
+    out = []
+    for it in items:
+        nm = it['name'] if isinstance(it, dict) else it
+        if _video_part(nm) not in exclude_names:
+            out.append(it)
+    return out
+
+
+# ==========================================
 # Helper Functions (Math & Sorting)
 # ==========================================
 
@@ -1042,7 +1087,7 @@ def sort_by_dist(data_list, reverse=False):
         del one['dist']
     return sortlist
 
-def get_top10_similar_mofea_features(audio_feat, eval_wrapper, motionembedding_dir, device='cuda:0'):
+def get_top10_similar_mofea_features(audio_feat, eval_wrapper, motionembedding_dir, device='cuda:0', top_k=10, exclude_names=None):
     assert audio_feat.shape == (384, 55), "Input audio feature shape must be (384, 55)"
     audio_feat_tensor = torch.from_numpy(audio_feat).unsqueeze(0).to(device).to(torch.float32)
 
@@ -1063,21 +1108,39 @@ def get_top10_similar_mofea_features(audio_feat, eval_wrapper, motionembedding_d
     all_motion_embeddings = np.stack(all_motion_embeddings, axis=0)
 
     dist_mat = euclidean_distance_matrix(audio_embedding, all_motion_embeddings)
-    argsmax = np.argsort(dist_mat[0])[:10]
+    sorted_idx = np.argsort(dist_mat[0])
 
-    top10 = []
-    for idx in argsmax:
-        top10.append({
-            'name': seqnames[idx],
+    top_items = []
+    for idx in sorted_idx:
+        nm = seqnames[idx]
+        if exclude_names and _video_part(nm) in exclude_names:
+            continue
+        top_items.append({
+            'name': nm,
             'dist': dist_mat[0][idx],
         })
+        if len(top_items) >= top_k:
+            break
 
-    sorted_top10 = sort_by_dist(top10)
-    return sorted_top10
+    sorted_top = sort_by_dist(top_items)
+    return sorted_top
 
-def get_items_by_style_and_idx(retrieval_filepath: str, 
-                                    target_style: str, 
-                                    target_idx: int) -> list:
+def _match_style_from_name(name: str, target_style: str) -> bool:
+    if not target_style:
+        return True
+    name_lower = name.lower()
+    style_lower = target_style.lower()
+    if name_lower.startswith(style_lower):
+        return True
+    if '-' in name_lower and name_lower.split('-', 1)[0] == style_lower:
+        return True
+    return False
+
+def get_items_by_style_and_idx(retrieval_filepath: str,
+                                    target_style: str,
+                                    target_idx: int,
+                                    top_k: int = 10,
+                                    exclude_names=None) -> list:
     """
     Unified version: Returns both the list of names and the list of dicts.
     Snippet A used this signature. Snippet B callers will need to unpack just the first return value.
@@ -1087,15 +1150,29 @@ def get_items_by_style_and_idx(retrieval_filepath: str,
             # data is { "idx_0": { "Style": [...] }, ... }
             data = json.load(f)
                     
-        # 1. Direct lookup idx (e.g., "idx_0")
-        style_dict = data.get(f"idx_{target_idx}", {})
-        
-        # 2. Direct lookup style (e.g., "Popular")
-        items_list = style_dict.get(target_style, [])
-        items_list_top10 = [item["name"] for item in items_list][:10]
+        # Dict format: { "idx_0": { "Style": [...] }, ... }
+        if isinstance(data, dict):
+            style_dict = data.get(f"idx_{target_idx}", {})
+            items_list = style_dict.get(target_style, [])
+        # List format: [ [ {"name": ...}, ... ], ... ]
+        elif isinstance(data, list):
+            if 0 <= target_idx < len(data):
+                items_list = data[target_idx]
+            else:
+                items_list = []
+            if target_style:
+                filtered = [item for item in items_list if _match_style_from_name(item.get("name", ""), target_style)]
+                if filtered:
+                    items_list = filtered
+        else:
+            items_list = []
 
-        items_list_top10_2 = [{'name': item['name']} for item in items_list][:10]
-        
+        if exclude_names:
+            items_list = [item for item in items_list if _video_part(item.get("name", "")) not in exclude_names]
+
+        items_list_top10 = [item["name"] for item in items_list][:top_k]
+        items_list_top10_2 = [{'name': item['name']} for item in items_list][:top_k]
+
         return items_list_top10, items_list_top10_2
         
     except FileNotFoundError:
@@ -1122,9 +1199,15 @@ def get_top_mofea(name: str = None,
                               style_map_path="/data2/hzy/InfiniteDance/InfiniteDanceData/styles/all_style_map.json",
                               style="Popular",
                               meta_path="meta",
-                              device='cuda:0'):
+                              device='cuda:0',
+                              top_k=10,
+                              exclude_names=None):
     """
     Snippet A version: Supports absolute paths.
+    `top_k` controls the number of retrieved neighbors (default 10).
+    `exclude_names`: optional set/list of video_part names to exclude from results
+        (e.g. AIST++ / FineDance names). When the JSON cache has fewer surviving
+        entries than top_k, returns however many remain.
     """
 
     if name != None:
@@ -1132,7 +1215,10 @@ def get_top_mofea(name: str = None,
         if os.path.exists(json_path):
             with open(json_path, 'r') as f:
                 data = json.load(f)
-            musiclist = data[idx][:10] if len(data[idx]) > 0 else [data[idx][0]] * 10
+            entries = data[idx]
+            if exclude_names:
+                entries = [e for e in entries if _video_part(e.get('name', '')) not in exclude_names]
+            musiclist = entries[:top_k] if len(entries) > 0 else []
             top10_results = [{'name': item['name']} for item in musiclist]
         else:
             from RetrievalNet.configs import get_config
@@ -1144,7 +1230,7 @@ def get_top_mofea(name: str = None,
                     pad_length = 384 - motion.shape[0]
                     motion = np.pad(motion, ((0, pad_length), (0, 0)), mode='wrap')
 
-            top10_results = get_top10_similar_mofea_features(motion, eval_wrapper, motionembedding_dir, device=device)
+            top10_results = get_top10_similar_mofea_features(motion, eval_wrapper, motionembedding_dir, device=device, top_k=top_k, exclude_names=exclude_names)
     else:
         from RetrievalNet.configs import get_config
         from RetrievalNet.datasets import EvaluatorModelWrapper
@@ -1155,7 +1241,7 @@ def get_top_mofea(name: str = None,
                 pad_length = 384 - motion.shape[0]
                 motion = np.pad(motion, ((0, pad_length), (0, 0)), mode='wrap')
 
-        top10_results = get_top10_similar_mofea_features(motion, eval_wrapper, motionembedding_dir, device=device)
+        top10_results = get_top10_similar_mofea_features(motion, eval_wrapper, motionembedding_dir, device=device, top_k=top_k, exclude_names=exclude_names)
 
     # Extract motion segments
     results = []
@@ -1216,7 +1302,8 @@ def get_top_mofea(name: str = None,
         print("No valid motion segments found.")
         return None, genre_proportions, top_genre, top10_results
 
-    weights = np.array([10 - i for i in range(min(len(mofea264_list), 10))], dtype=np.float32)
+    n_used = min(len(mofea264_list), top_k)
+    weights = np.array([n_used - i for i in range(n_used)], dtype=np.float32)
     weights /= weights.sum()
 
     min_length = min(segment.shape[0] for segment in mofea264_list)
@@ -1233,7 +1320,7 @@ def get_top_mofea(name: str = None,
             if '_' in frame_part:
                 start_idx, end_idx = map(int, frame_part.split('_'))
                 top10_names_indices.append((video_part, start_idx, end_idx))
-                
+
     motiontoken_dir = "/data2/hzy/InfiniteDance/InfiniteDanceData/dance/Infinite_MotionTokens_512_vel_processed"
     token_segments = []
 
@@ -1272,9 +1359,13 @@ def get_top_mofea_specific_style(name: str = None,
                               meta_path="meta",
                               device='cuda:0',
                               windows_length=120,
-                              infertype="infinitedance"):
+                              infertype="infinitedance",
+                              top_k=10,
+                              exclude_names=None):
     """
     Snippet A version: Includes logic for infertype='infinitedanceplus' (v6_2 windowed tokens).
+    `top_k` controls the number of retrieved neighbors (default 10).
+    `exclude_names`: optional set/list of video_part names to exclude (e.g. AIST++ / FineDance).
     """
     if name==None and motion is None:
         raise ValueError("Must provide name or motion.")
@@ -1287,7 +1378,9 @@ def get_top_mofea_specific_style(name: str = None,
             _, top10_results = get_items_by_style_and_idx(
                     retrieval_filepath=json_path,
                     target_style=style,
-                    target_idx=idx
+                    target_idx=idx,
+                    top_k=top_k,
+                    exclude_names=exclude_names
                 )
         else:
             from RetrievalNet.configs import get_config
@@ -1299,7 +1392,7 @@ def get_top_mofea_specific_style(name: str = None,
                     pad_length = 384 - motion.shape[0]
                     motion = np.pad(motion, ((0, pad_length), (0, 0)), mode='wrap')
 
-            top10_results = get_top10_similar_mofea_features(motion, eval_wrapper, motionembedding_dir, device=device)
+            top10_results = get_top10_similar_mofea_features(motion, eval_wrapper, motionembedding_dir, device=device, top_k=top_k, exclude_names=exclude_names)
     else:
         from RetrievalNet.configs import get_config
         from RetrievalNet.datasets import EvaluatorModelWrapper
@@ -1310,7 +1403,7 @@ def get_top_mofea_specific_style(name: str = None,
                 pad_length = 384 - motion.shape[0]
                 motion = np.pad(motion, ((0, pad_length), (0, 0)), mode='wrap')
 
-        top10_results = get_top10_similar_mofea_features(motion, eval_wrapper, motionembedding_dir, device=device)
+        top10_results = get_top10_similar_mofea_features(motion, eval_wrapper, motionembedding_dir, device=device, top_k=top_k, exclude_names=exclude_names)
 
     # Extract motion segments
     results = []
@@ -1374,7 +1467,8 @@ def get_top_mofea_specific_style(name: str = None,
         print("No valid motion segments found.")
         return None, genre_proportions, top_genre, top10_results
 
-    weights = np.array([10 - i for i in range(min(len(mofea264_list), 10))], dtype=np.float32)
+    n_used = min(len(mofea264_list), top_k)
+    weights = np.array([n_used - i for i in range(n_used)], dtype=np.float32)
     weights /= weights.sum()
 
     min_length = min(segment.shape[0] for segment in mofea264_list)
@@ -1391,7 +1485,7 @@ def get_top_mofea_specific_style(name: str = None,
             if '_' in frame_part:
                 start_idx, end_idx = map(int, frame_part.split('_'))
                 top10_names_indices.append((video_part, start_idx, end_idx))
-                
+
     motiontoken_dir = "/data2/hzy/InfiniteDance/InfiniteDanceData/dance/Infinite_MotionTokens_512_vel_processed"
     v6_2_token_dir = "/data2/hzy/InfiniteDance/InfiniteDanceData/ALL_SD_ID_DATA/motion_264_30fps_tokens_1layer_windowed"
     token_segments = []
@@ -1474,6 +1568,124 @@ def get_top_mofea_specific_style(name: str = None,
     return weighted_sum, genre_proportions, top_genre, top10_results, top10_names_indices, token_segments
 
 # ==========================================
+# Exclude-AISTPP-FineDance convenience wrappers
+# ==========================================
+
+# Cached excluded-names set (lazy build).
+_AISTPP_FINEDANCE_EXCLUDE_CACHE = None
+
+
+def get_aistpp_finedance_excluded_names(partition_files=None, force_reload=False):
+    """Return the cached set of AIST++/FineDance video names to exclude from retrieval."""
+    global _AISTPP_FINEDANCE_EXCLUDE_CACHE
+    if _AISTPP_FINEDANCE_EXCLUDE_CACHE is None or force_reload:
+        files = partition_files if partition_files is not None else DEFAULT_AISTPP_FINEDANCE_PARTITION_FILES
+        _AISTPP_FINEDANCE_EXCLUDE_CACHE = load_excluded_names_from_partitions(files)
+        print(f"[exclude] loaded {len(_AISTPP_FINEDANCE_EXCLUDE_CACHE)} AIST++/FineDance names to exclude")
+    return _AISTPP_FINEDANCE_EXCLUDE_CACHE
+
+
+def get_top_mofea_exclude_aistpp_finedance(*args, partition_files=None, **kwargs):
+    """Like get_top_mofea, but skips any retrieval entry whose video belongs to AIST++ or FineDance."""
+    excl = get_aistpp_finedance_excluded_names(partition_files)
+    if 'exclude_names' in kwargs and kwargs['exclude_names']:
+        kwargs['exclude_names'] = set(kwargs['exclude_names']) | excl
+    else:
+        kwargs['exclude_names'] = excl
+    return get_top_mofea(*args, **kwargs)
+
+
+def get_top_mofea_specific_style_exclude_aistpp_finedance(*args, partition_files=None, **kwargs):
+    """Like get_top_mofea_specific_style, but excludes AIST++/FineDance entries from retrieval."""
+    excl = get_aistpp_finedance_excluded_names(partition_files)
+    if 'exclude_names' in kwargs and kwargs['exclude_names']:
+        kwargs['exclude_names'] = set(kwargs['exclude_names']) | excl
+    else:
+        kwargs['exclude_names'] = excl
+    return get_top_mofea_specific_style(*args, **kwargs)
+
+
+def get_top_mofea_specific_style_only_aistpp_finedance(*args, partition_files=None, **kwargs):
+    """Inverse of *_exclude_aistpp_finedance: keep ONLY AIST++/FineDance entries.
+
+    Implementation note: we read the retrieval JSON ourselves, prefilter
+    candidates to those whose video_part is in the AIST++/FineDance set, and
+    pass the prefiltered list back via a temporary file. To avoid touching the
+    underlying loader, we use a thread-local override of the include set.
+    """
+    inc = get_aistpp_finedance_excluded_names(partition_files)
+    # Convert "include" semantics into "exclude everything not in inc" by
+    # walking the retrieval json once and constructing a per-call exclude set
+    # that complements the include set. We need the candidate names from disk.
+    import json as _json
+    name = kwargs.get('name') or (args[0] if args else None)
+    retrieval_path = kwargs.get('retrieval_path', None)
+    if name is None or retrieval_path is None:
+        # Fallback: just call original (will likely return empty)
+        return get_top_mofea_specific_style(*args, **kwargs)
+    rfp = os.path.join(retrieval_path, f"{name}.json")
+    drop = set()
+    try:
+        with open(rfp, 'r') as f:
+            data = _json.load(f)
+        if isinstance(data, dict):
+            for _idx_key, styles in data.items():
+                if not isinstance(styles, dict):
+                    continue
+                for _style, cands in styles.items():
+                    if not isinstance(cands, list):
+                        continue
+                    for c in cands:
+                        nm = c['name'] if isinstance(c, dict) else c
+                        if _video_part(nm) not in inc:
+                            drop.add(_video_part(nm))
+        elif isinstance(data, list):
+            for cands in data:
+                if not isinstance(cands, list):
+                    continue
+                for c in cands:
+                    nm = c['name'] if isinstance(c, dict) else c
+                    if _video_part(nm) not in inc:
+                        drop.add(_video_part(nm))
+    except Exception:
+        pass
+
+    if 'exclude_names' in kwargs and kwargs['exclude_names']:
+        kwargs['exclude_names'] = set(kwargs['exclude_names']) | drop
+    else:
+        kwargs['exclude_names'] = drop
+    return get_top_mofea_specific_style(*args, **kwargs)
+
+
+# ==========================================
+# Top-K convenience wrappers (top1 / top3 / top20)
+# ==========================================
+
+def get_top1_mofea(*args, **kwargs):
+    kwargs['top_k'] = 1
+    return get_top_mofea(*args, **kwargs)
+
+def get_top3_mofea(*args, **kwargs):
+    kwargs['top_k'] = 3
+    return get_top_mofea(*args, **kwargs)
+
+def get_top20_mofea(*args, **kwargs):
+    kwargs['top_k'] = 20
+    return get_top_mofea(*args, **kwargs)
+
+def get_top1_mofea_specific_style(*args, **kwargs):
+    kwargs['top_k'] = 1
+    return get_top_mofea_specific_style(*args, **kwargs)
+
+def get_top3_mofea_specific_style(*args, **kwargs):
+    kwargs['top_k'] = 3
+    return get_top_mofea_specific_style(*args, **kwargs)
+
+def get_top20_mofea_specific_style(*args, **kwargs):
+    kwargs['top_k'] = 20
+    return get_top_mofea_specific_style(*args, **kwargs)
+
+# ==========================================
 # Legacy / Relative Path Functions from Snippet B
 # ==========================================
 
@@ -1535,8 +1747,8 @@ def get_top10_mofea264_1(name: str, muidx: int,
         mofea264_list.append(normed_segment)
 
     if not mofea264_list:
-        print("No valid motion segments found.")
-        return None
+        print("No valid motion segments found. Returning zeros.")
+        return np.zeros((384, mean.shape[0]), dtype=np.float32)
 
     weights = np.array([10 - i for i in range(min(len(mofea264_list), 10))], dtype=np.float32)
     weights /= weights.sum()
@@ -1551,28 +1763,39 @@ def get_top10_mofea264_1(name: str, muidx: int,
     return weighted_sum
 
 def get_top10_mofea264_specific_style(name: str, muidx: int,
-                       retrieval_path="../InfiniteDanceData",
-                       motion_base="../InfiniteDanceData",
+                       retrieval_path="/data2/hzy/InfiniteDance/InfiniteDanceData/dance/retrieval_s192_l384",
+                       motion_base="/data2/hzy/InfiniteDance/InfiniteDanceData/dance/alldata_new_joint_vecs264",
                        style="Popular",
-                       meta_path="meta"):
+                       meta_path="/data2/hzy/InfiniteDance/InfiniteDanceData/dance/meta"):
     '''
     old version, use 264dim motion features (with style)
     '''
 
     json_path = os.path.join(retrieval_path, f"{name}.json")
 
+    if os.path.isabs(meta_path):
+        mean_path = os.path.join(meta_path, "Mean.npy")
+        std_path = os.path.join(meta_path, "Std.npy")
+    else:
+        mean_path = os.path.join(motion_base, meta_path, "Mean.npy")
+        std_path = os.path.join(motion_base, meta_path, "Std.npy")
+    mean = np.load(mean_path)
+    std = np.load(std_path)
+
     if not os.path.exists(json_path):
-        motion = np.load(f"../InfiniteDanceData")
-        num_frames, dim = motion.shape
-
-        if num_frames >= 384:
-            motion_fixed = motion[:384]
-        else:
-            pad_len = 384 - num_frames
-            padding = np.zeros((pad_len, dim), dtype=motion.dtype)
-            motion_fixed = np.concatenate([motion, padding], axis=0)
-
-        return motion_fixed
+        fallback_motion_path = os.path.join(motion_base, f"{name}.npy")
+        if os.path.exists(fallback_motion_path):
+            motion = np.load(fallback_motion_path)
+            start = muidx * 96
+            end = start + 384
+            segment = motion[start:end]
+            if segment.shape[0] < 384:
+                pad_len = 384 - segment.shape[0]
+                padding = np.zeros((pad_len, segment.shape[1]), dtype=segment.dtype)
+                segment = np.concatenate([segment, padding], axis=0)
+            return (segment - mean) / std
+        print(f"[WARN] 检索文件缺失，且未找到 motion：{fallback_motion_path}，返回全零 (384, {mean.shape[0]})")
+        return np.zeros((384, mean.shape[0]), dtype=np.float32)
 
     if os.path.exists(json_path):
         # NOTE: Updated to unpack tuple from unified get_items_by_style_and_idx
@@ -1589,11 +1812,6 @@ def get_top10_mofea264_specific_style(name: str, muidx: int,
             if '_' in frame_part:
                 start_frame, end_frame = map(int, frame_part.split('_'))
                 result.append((video_part, start_frame, end_frame))
-
-    mean_path = os.path.join(motion_base, meta_path, "Mean.npy")
-    std_path = os.path.join(motion_base, meta_path, "Std.npy")
-    mean = np.load(mean_path)
-    std = np.load(std_path)
 
     mofea264_list = []
     for video_name, start, end in result:

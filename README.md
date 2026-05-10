@@ -99,30 +99,41 @@ You can run the full inference pipeline (Generation → Post-processing → Visu
 
 #### Option A: Quick Start (Recommended)
 
-Edit `infer.sh` in `All_LargeDanceAR` to set your paths, then run:
+`infer.sh` runs Inference → tokens-to-SMPL → optional rendering, with
+anti-collapse decoding enabled by default.
 
 ```bash
 cd All_LargeDanceAR
-chmod +x infer.sh
-./infer.sh
-
+DATA_ROOT=../InfiniteDanceData \
+CHECKPOINT_PATH=./output/exp_m2d_infinitedance/best_model_stage2.pt \
+bash infer.sh
 ```
 
-#### Option B: Manual Execution
+The default decoding hyper-parameters used to obtain the reported metrics are:
 
-To generate dance tokens manually from music features:
+| env var | default | meaning |
+|---|---|---|
+| `SAFE_REP_PENALTY` | `1.20` | repetition logit penalty |
+| `SAFE_MAX_REP_S0`  | `8`    | max consecutive repeats on slot-0 codebook |
+| `SAFE_MAX_REP_OTHER` | `16` | max consecutive repeats on slots 1 / 2 |
+| `SAFE_NGRAM_S0`    | `5`    | n-gram block size on slot-0 |
+| `SAFE_TEMP_BOOST`  | `1.8`  | temperature boost when collapse triggers |
+
+Other useful overrides: `GPU_ID`, `PROCESSES_PER_GPU`, `STYLE`, `MUSIC_LENGTH`,
+`DANCE_LENGTH`, `TEMPERATURE`, `TOP_K`, `TOP_P`, `SEED`.
+
+#### Option B: Manual Execution
 
 ```bash
 cd All_LargeDanceAR
 
 python infer_llama_infinitedance.py \
-    --music_path <your path>/InfiniteDanceData/music/muq_features/test_infinitedance \
-    --checkpoint_path <your path>/All_LargeDanceAR/output/exp_m2d_infinitedance/best_model_stage2.pt \
-    --vqvae_checkpoint_path <your path>/All_LargeDanceAR/models/checkpoints/dance_vqvae.pth \
-    --output_dir <your path>/All_LargeDanceAR/infer_results \
-    --style Popular \
-    --dance_length 288
-
+    --music_path ../InfiniteDanceData/music/muq_features/test_infinitedance \
+    --checkpoint_path ./output/exp_m2d_infinitedance/best_model_stage2.pt \
+    --vqvae_checkpoint_path ./models/checkpoints/dance_vqvae.pth \
+    --output_dir ./infer_results \
+    --style Popular --music_length 320 --dance_length 288 \
+    --temperature 0.8 --top_k 15 --top_p 0.95 --seed 42
 ```
 
 **Visualization Pipeline**:
@@ -139,36 +150,28 @@ python ./visualization/render_plot_npy.py --joints_dir ./infer_results/dance/npy
 
 ### 1.1 Metrics
 
-To evaluate metrics, make sure you are in `All_LargeDanceAR`:
+`metrics.sh` runs FID-k / FID-m / Div-k / Div-m and the official Beat-Align score.
 
 ```bash
 cd All_LargeDanceAR
-./metrics.sh <base_path> [device_id]
-
+bash metrics.sh <pred_root> [device_id]
+# pred_root e.g. ./infer/dance_<TS>/dance/npy/joints
 ```
 
 ### 2. Training
 
-The training process is divided into two stages:
-
-* **Stage 1**: Train the bridge module and adapters while freezing the LLM backbone.
-* **Stage 2**: Full-parameter fine-tuning of the entire system.
+Two-stage training (stage 1: bridges + adapters, LLM frozen; stage 2: full fine-tune)
+is run via DDP. Edit `train.sh` (or pass env vars) and launch:
 
 ```bash
 cd All_LargeDanceAR
 
-# Start Training
-python train_infinitedance_start.py \
-    --dance_dir <your path>/InfiniteDanceData/dance/Infinite_MotionTokens_512_vel_processed \
-    --music_dir <your path>/InfiniteDanceData/music/muq_features \
-    --vqvae_checkpoint_path <your path>/All_LargeDanceAR/models/checkpoints/dance_vqvae.pth \
-    --llama_config_path <your path>/All_LargeDanceAR/models/Llama3.2-1B/config.json \
-    --world_size 4 \
-    --batch_size 8 \
-    --learning_rate1 4e-5 \
-    --stage1_epoch 2 \
-    --stage2_epoch 50
+# Default: 8 GPUs, bf16, with regularization (weight_decay=0.10,
+# llama_dropout=0.15, cond_drop_prob=0.15)
+GPUS=0,1,2,3,4,5,6,7 WS=8 DATA_ROOT=../InfiniteDanceData bash train.sh
 
+# Warm-start from a previous stage-2 checkpoint
+PREV_CKPT=./output/m2d_llama/<run>/epoch_X_stage2.pt bash train.sh
 ```
 
 ---
