@@ -1614,14 +1614,11 @@ def get_top_mofea_specific_style_only_aistpp_finedance(*args, partition_files=No
     underlying loader, we use a thread-local override of the include set.
     """
     inc = get_aistpp_finedance_excluded_names(partition_files)
-    # Convert "include" semantics into "exclude everything not in inc" by
-    # walking the retrieval json once and constructing a per-call exclude set
-    # that complements the include set. We need the candidate names from disk.
     import json as _json
     name = kwargs.get('name') or (args[0] if args else None)
-    retrieval_path = kwargs.get('retrieval_path', None)
-    if name is None or retrieval_path is None:
-        # Fallback: just call original (will likely return empty)
+    retrieval_path = kwargs.get('retrieval_path',
+        "/data2/hzy/InfiniteDance/InfiniteDanceData/dance/retrieval_s192_l384_style")
+    if name is None:
         return get_top_mofea_specific_style(*args, **kwargs)
     rfp = os.path.join(retrieval_path, f"{name}.json")
     drop = set()
@@ -1654,7 +1651,13 @@ def get_top_mofea_specific_style_only_aistpp_finedance(*args, partition_files=No
         kwargs['exclude_names'] = set(kwargs['exclude_names']) | drop
     else:
         kwargs['exclude_names'] = drop
-    return get_top_mofea_specific_style(*args, **kwargs)
+    out = get_top_mofea_specific_style(*args, **kwargs)
+    if isinstance(out, tuple) and len(out) == 4:
+        ws, genre_props, top_genre, top10 = out
+        if ws is None:
+            ws = np.zeros((384, 264), dtype=np.float32)
+        return ws, genre_props, top_genre, top10, [], []
+    return out
 
 
 # ==========================================

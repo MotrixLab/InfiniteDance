@@ -65,8 +65,10 @@ InfiniteDanceData/music/*
 **/*.pth.tar
 **/output/
 **/checkpoints/
-# Do not ship Meta's LLaMA artifacts in this repo; users download from HF
+# LLaMA-3.2-1B: keep the architecture config only; do not ship Meta's weights/tokenizer
 All_LargeDanceAR/models/Llama3.2-1B/*
+!All_LargeDanceAR/models/Llama3.2-1B/config.json
+!All_LargeDanceAR/models/Llama3.2-1B/generation_config.json
 
 **/checkpoints/**/*.txt
 **/eval/*.txt

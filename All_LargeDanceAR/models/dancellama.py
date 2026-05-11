@@ -69,18 +69,20 @@ class Music2DanceLlamaModel(nn.Module):
         self.dance_ranges_count = dance_ranges_count
         self.llama_config_path=llama_config_path
 
-        # ★ 从 Meta 官方 LLaMA-3.2-1B 加载预训练权重(safetensors),不是只用 config 随机初始化
-        # llama_config_path 是 /path/to/Llama3.2-1B/config.json,from_pretrained 会读父目录的所有权重
+        # Two init paths:
+        #   (1) If Meta LLaMA-3.2-1B weights are present in llama_dir, load them.
+        #   (2) Otherwise build from config only (random init). This is fine
+        #       for inference because the released checkpoint already contains
+        #       all 1.14B parameters and will overwrite the random init.
         import os as _os
         llama_dir = _os.path.dirname(llama_config_path)
         try:
             self.llama = LlamaForCausalLM.from_pretrained(llama_dir)
             print(f"[Music2DanceLlamaModel] LLaMA loaded from {llama_dir}")
-        except Exception as _e:
-            # fallback:旧路径,随机初始化
-            print(f"[Music2DanceLlamaModel] from_pretrained failed ({_e}), fallback to random init")
+        except Exception:
             config = AutoConfig.from_pretrained(llama_config_path)
             self.llama = LlamaForCausalLM(config=config)
+            print(f"[Music2DanceLlamaModel] LLaMA built from config (weights will come from released checkpoint)")
 
         # 扩 vocab(原 LLaMA-3.2 是 128K vocab,扩到 5888 不会有 token 增加而是缩小)
         # 但我们想要 dance token IDs 在 4096-5887 范围 → vocab_size=5888,需要把 LLaMA 的 embed/lm_head 缩到 5888

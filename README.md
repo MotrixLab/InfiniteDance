@@ -65,10 +65,9 @@ Download the `InfiniteDanceData` folder and place it in the repo root:
 
 Please place the downloaded weights in their respective directories:
 
-* **VQ-VAE Weights**: `All_LargeDanceAR/models/checkpoints/`
-* **RetrievalNet Weights**: `All_LargeDanceAR/RetrievalNet/checkpoints/`
-* **InfiniteDance Fine-tuned Weights**: `All_LargeDanceAR/output/exp_m2d_infinitedance/`
-* **Base LLM**: Download [Llama-3.2-1B](https://huggingface.co/meta-llama/Llama-3.2-1B) and place it in `All_LargeDanceAR/models/Llama3.2-1B/`.
+* **VQ-VAE Weights**: `All_LargeDanceAR/models/checkpoints/dance_vqvae.pth`
+* **InfiniteDance Fine-tuned Weights**: `All_LargeDanceAR/output/exp_m2d_infinitedance/best_model_stage2.pt`
+* **Base LLM**: The released checkpoint already contains the full LLaMA-3.2-1B backbone weights, so you do **not** need to download anything from Meta. We ship the architecture `config.json` in `All_LargeDanceAR/models/Llama3.2-1B/`.
 
 After placement, the expected structure looks like this:
 
