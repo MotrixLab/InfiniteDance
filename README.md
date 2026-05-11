@@ -128,18 +128,10 @@ CHECKPOINT_PATH=./output/exp_m2d_infinitedance/best_model_stage2.pt \
 bash infer.sh
 ```
 
-The default decoding hyper-parameters used to obtain the reported metrics are:
-
-| env var | default | meaning |
-|---|---|---|
-| `SAFE_REP_PENALTY` | `1.20` | repetition logit penalty |
-| `SAFE_MAX_REP_S0`  | `8`    | max consecutive repeats on slot-0 codebook |
-| `SAFE_MAX_REP_OTHER` | `16` | max consecutive repeats on slots 1 / 2 |
-| `SAFE_NGRAM_S0`    | `5`    | n-gram block size on slot-0 |
-| `SAFE_TEMP_BOOST`  | `1.8`  | temperature boost when collapse triggers |
-
-Other useful overrides: `GPU_ID`, `PROCESSES_PER_GPU`, `STYLE`, `MUSIC_LENGTH`,
-`DANCE_LENGTH`, `TEMPERATURE`, `TOP_K`, `TOP_P`, `SEED`.
+Common overrides: `GPU_ID`, `PROCESSES_PER_GPU`, `STYLE`, `MUSIC_LENGTH`,
+`DANCE_LENGTH`, `TEMPERATURE`, `TOP_K`, `TOP_P`, `SEED`. Anti-collapse
+decoding is enabled by default; see the comments at the top of `infer.sh`
+to tune it.
 
 #### Option B: Manual Execution
 
@@ -185,9 +177,12 @@ is run via DDP. Edit `train.sh` (or pass env vars) and launch:
 ```bash
 cd All_LargeDanceAR
 
-# Default: 8 GPUs, bf16, with regularization (weight_decay=0.10,
+# Default: 4 GPUs, bf16, with regularization (weight_decay=0.10,
 # llama_dropout=0.15, cond_drop_prob=0.15)
-GPUS=0,1,2,3,4,5,6,7 WS=8 DATA_ROOT=../InfiniteDanceData bash train.sh
+DATA_ROOT=../InfiniteDanceData bash train.sh
+
+# Other GPU counts
+GPUS=0,1 WS=2 DATA_ROOT=../InfiniteDanceData bash train.sh
 
 # Warm-start from a previous stage-2 checkpoint
 PREV_CKPT=./output/m2d_llama/<run>/epoch_X_stage2.pt bash train.sh

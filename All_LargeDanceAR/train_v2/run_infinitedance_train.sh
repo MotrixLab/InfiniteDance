@@ -8,8 +8,8 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 REPO_DIR="$( cd "$SCRIPT_DIR/.." && pwd )"
 cd "$REPO_DIR"
 
-GPUS=${GPUS:-0,1,2,3,4,5,6,7}
-WS=${WS:-8}
+GPUS=${GPUS:-0,1,2,3}
+WS=${WS:-4}
 BATCH=${BATCH:-8}
 ACCUM=${ACCUM:-1}
 S2_LR=${S2_LR:-2e-5}
