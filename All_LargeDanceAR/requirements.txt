@@ -16,6 +16,7 @@ pyyaml==6.0.2
 tensorboardX==2.6.2.2
 librosa==0.7.2
 soundfile==0.12.1
+muq
 smplx==0.1.28
 chumpy==0.70
 opencv-python-headless==4.12.0.88

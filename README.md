@@ -94,6 +94,26 @@ InfiniteDance├── InfiniteDanceData/
 
 ### 1. Inference & Reproduction
 
+The model takes per-frame **MuQ embeddings** as input (`(T, 1024)` float32
+`.npy`, ~30 frames per second). Two ways to provide them:
+
+* **Use the released test set** — download `muq_features_test_infinitedance.tar.gz`
+  from Hugging Face and extract it; this is what `infer.sh` defaults to.
+* **Use your own audio** — convert wav / mp3 to MuQ embeddings first:
+
+  ```bash
+  cd All_LargeDanceAR
+  python utils/extract_muq.py \
+      --in_dir  /path/to/your_audio_dir \
+      --out_dir ../InfiniteDanceData/music/muq_features/my_songs
+  ```
+
+  Then point `infer.sh` at the new directory:
+
+  ```bash
+  MUSIC_PATH=../InfiniteDanceData/music/muq_features/my_songs bash infer.sh
+  ```
+
 You can run the full inference pipeline (Generation → Post-processing → Visualization) using the provided shell script or by running the python scripts manually.
 
 #### Option A: Quick Start (Recommended)
