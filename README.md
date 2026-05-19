@@ -48,45 +48,90 @@ pip install -r requirements.txt
 
 ## 📥 Downloads (Data & Weights)
 
-All datasets and pre-trained checkpoints are hosted on Hugging Face. After download, place them in the following locations (relative to the repo root unless you use absolute paths):
+All weights and data are hosted on Hugging Face:
+**[🤗 huuuuuuuuu/InfiniteDance](https://huggingface.co/huuuuuuuuu/InfiniteDance)**
 
-**[🤗 Hugging Face CheckPoints: InfiniteDance](https://huggingface.co/huuuuuuuuu/InfiniteDance)**
+The HF repo layout mirrors this repo exactly — every file's path on HF is
+where it should live locally. The only step is to download into the repo
+root and extract the tarballs in place.
 
-### 1. Data Setup
+### File map (HF → local)
 
-Download the `InfiniteDanceData` folder and place it in the repo root:
+| File on HF | Size | Place at (relative to repo root) |
+|---|---|---|
+| `models/checkpoints/dance_vqvae.pth` | 462 MB | `All_LargeDanceAR/models/checkpoints/dance_vqvae.pth` |
+| `output/exp_m2d_infinitedance/best_model_stage2.pt` | 2.3 GB | `All_LargeDanceAR/output/exp_m2d_infinitedance/best_model_stage2.pt` |
+| `InfiniteDanceData/dance/alldata_new_joint_vecs264/meta/{Mean,Std}.npy` | 2 KB ea | same path under repo root |
+| `InfiniteDanceData/DanceVQVAE/body_models/smpl/*` | 40 MB | same path under repo root |
+| `InfiniteDanceData/partition/*.txt` | <1 MB | same path under repo root |
+| `InfiniteDanceData/styles/all_style_map.json` | 0.5 MB | same path under repo root |
+| `InfiniteDanceData/Infinite_MotionTokens_512_vel_processed.tar.gz` | 14 MB | extract → `InfiniteDanceData/dance/Infinite_MotionTokens_512_vel_processed/` |
+| `InfiniteDanceData/muq_features_test_infinitedance.tar.gz` | 2.6 GB | extract → `InfiniteDanceData/music/muq_features/test_infinitedance/` |
+| `InfiniteDanceData/musicfeature_55_allmusic_pure.tar.gz` | 3.0 GB | extract → `InfiniteDanceData/music/musicfeature_55_allmusic_pure/` |
+| `InfiniteDanceData/retrieval_s192_l384_style.tar.gz` | 839 MB | extract → `InfiniteDanceData/dance/retrieval_s192_l384_style/` |
+
+> The released `best_model_stage2.pt` **already contains the full LLaMA-3.2-1B
+> backbone**, so you do *not* need to download anything from Meta. We ship
+> the architecture `config.json` in `All_LargeDanceAR/models/Llama3.2-1B/`
+> for completeness.
+
+### One-shot download
 
 ```bash
-# Path: <your path>/InfiniteDance_opensource/InfiniteDanceData
+# from the repo root
+pip install -U "huggingface_hub[cli]"
 
+# downloads the entire HF repo on top of your local clone — paths match,
+# so files land in the right place automatically
+huggingface-cli download huuuuuuuuu/InfiniteDance \
+    --repo-type model \
+    --local-dir . \
+    --local-dir-use-symlinks False
+
+# extract the four tarballs in place
+cd InfiniteDanceData
+mkdir -p dance music/muq_features
+tar -xzf Infinite_MotionTokens_512_vel_processed.tar.gz -C dance/
+tar -xzf retrieval_s192_l384_style.tar.gz              -C dance/
+tar -xzf musicfeature_55_allmusic_pure.tar.gz          -C music/
+tar -xzf muq_features_test_infinitedance.tar.gz        -C music/muq_features/
+cd ..
 ```
 
-### 2. Model Weights Setup
-
-Please place the downloaded weights in their respective directories:
-
-* **VQ-VAE Weights**: `All_LargeDanceAR/models/checkpoints/dance_vqvae.pth`
-* **InfiniteDance Fine-tuned Weights**: `All_LargeDanceAR/output/exp_m2d_infinitedance/best_model_stage2.pt`
-* **Base LLM**: The released checkpoint already contains the full LLaMA-3.2-1B backbone weights, so you do **not** need to download anything from Meta. We ship the architecture `config.json` in `All_LargeDanceAR/models/Llama3.2-1B/`.
-
-After placement, the expected structure looks like this:
+### Expected layout after download
 
 ```text
-InfiniteDance├── InfiniteDanceData/
-│   ├── dance/
-│   ├── music/
-│   ├── partition/
-│   └── styles/
-└── All_LargeDanceAR/
-    ├── models/
-    │   ├── checkpoints/
-    │   └── Llama3.2-1B/
-    ├── RetrievalNet/
-    │   └── checkpoints/
-    └── output/
-        └── exp_m2d_infinitedance/
-
+InfiniteDance/
+├── All_LargeDanceAR/
+│   ├── models/
+│   │   ├── checkpoints/dance_vqvae.pth                # ← VQ-VAE
+│   │   └── Llama3.2-1B/config.json                    # architecture only
+│   └── output/
+│       └── exp_m2d_infinitedance/
+│           └── best_model_stage2.pt                   # ← main ckpt (incl. LLaMA)
+└── InfiniteDanceData/
+    ├── dance/
+    │   ├── alldata_new_joint_vecs264/meta/{Mean,Std}.npy
+    │   ├── Infinite_MotionTokens_512_vel_processed/   # ← extracted
+    │   └── retrieval_s192_l384_style/                 # ← extracted
+    ├── music/
+    │   ├── muq_features/test_infinitedance/           # ← extracted (MuQ test set)
+    │   └── musicfeature_55_allmusic_pure/             # ← extracted (BA metric)
+    ├── partition/
+    ├── styles/
+    └── DanceVQVAE/body_models/smpl/
 ```
+
+### What you can reproduce with this release
+
+| Task | Status | Notes |
+|---|---|---|
+| Inference on the released MuQ test set | ✅ | `bash infer.sh` |
+| Inference on your own audio (mp3 / wav) | ✅ | via `utils/extract_muq.py` |
+| Beat-Align (BA) metric | ✅ | needs `musicfeature_55_allmusic_pure` |
+| Retrieval ablations | ✅ | uses `retrieval_s192_l384_style` |
+| **FID-k / FID-m / Div-k / Div-m** | ⚠️ partial | requires GT joints (`ourData_smplx_22_smooth_new/`), which are **not yet released**; we will add them in a follow-up upload |
+| **Training from scratch** | ⚠️ partial | requires the full 264-d motion features (`alldata_new_joint_vecs264/`), **not yet released**. Only `Mean.npy` / `Std.npy` and the tokenized version (`Infinite_MotionTokens_512_vel_processed/`) are provided so far |
 
 ---
 
