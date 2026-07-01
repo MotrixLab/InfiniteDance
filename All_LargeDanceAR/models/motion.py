@@ -8,7 +8,7 @@ import models.vqvae as vqvae
 import numpy as np
 import torch
 
-def load_vqvae_model(checkpoint_path="/data1/hzy/HumanMotion/T2M-GPT_mofea264/output/exp_momask_alldata_mofea264_250425_1522/net_best_loss.pth",mean_path="/data2/hzy/InfiniteDance/InfiniteDanceData/dance/alldata_new_joint_vecs264/meta/Mean.npy",std_path="/data2/hzy/InfiniteDance/InfiniteDanceData/dance/alldata_new_joint_vecs264/meta/Std.npy",device=None):
+def load_vqvae_model(checkpoint_path="./models/checkpoints/dance_vqvae.pth",mean_path="../InfiniteDanceData/dance/alldata_new_joint_vecs264/meta/Mean.npy",std_path="../InfiniteDanceData/dance/alldata_new_joint_vecs264/meta/Std.npy",device=None):
     # checkpoint_path = '/data1/hzy/HumanMotion/T2M-GPT_mofea264/output/exp_momask_aistpp_mofea264_250619_0859/net_best_loss_train.pth'
     # print(f"Loading VQVAE model from {checkpoint_path}")
     opt_path = os.path.join(os.path.dirname(checkpoint_path), "args.json")

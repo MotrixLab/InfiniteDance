@@ -105,9 +105,9 @@ def load_vqvae_model(checkpoint_path=None):
 
 def load_mean_std(mean_path=None, std_path=None):
     if mean_path is None:
-        mean_path = os.path.join(DATA_DIR, "dance/alldata_new_joint_vecs264/meta/Mean.npy")
+        mean_path = os.path.join(DATA_DIR, "dance/vqvae_train_20260522/meta/Mean.npy")
     if std_path is None:
-        std_path = os.path.join(DATA_DIR, "dance/alldata_new_joint_vecs264/meta/Std.npy")
+        std_path = os.path.join(DATA_DIR, "dance/vqvae_train_20260522/meta/Std.npy")
         
     mean = np.load(mean_path)
     std = np.load(std_path)

@@ -1,17 +1,14 @@
-# 💃💃InfiniteDance: Scalable 3D Dance Generation Towards in-the-wild Generalization💃💃
+# 💃💃InfiniteDance: Scalable 3D Dance Generation Towards in-the-wild Generalization（ECCV 2026）💃💃
 
+[![ECCV 2026](https://img.shields.io/badge/ECCV-2026-3b5998.svg)](https://arxiv.org/abs/2603.13375)
 [![arXiv](https://img.shields.io/badge/arXiv-Paper-b31b1b.svg)](https://arxiv.org/abs/2603.13375)
 [![Project Page](https://img.shields.io/badge/Project-Homepage-008080?logo=googlechrome&logoColor=white)](https://infinitedance.github.io/#/)
 [![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Data%20%26%20Weights-ffc107?labelColor=yellow)](https://huggingface.co/huuuuuuuuu/InfiniteDance)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-> **Status**: 🚧 **Repository under active development.** We are continuously adding more data and features. More data and features are coming soon!
 
 
-
-## 🚀 Overview
-
-**InfiniteDance** is a comprehensive framework for scalable 3D music-to-dance generation, designed for high-quality generalization in-the-wild. 
+**InfiniteDance** is a framework for scalable 3D music-to-dance generation with high-quality in-the-wild generalization.
 
 ---
 
@@ -51,16 +48,15 @@ pip install -r requirements.txt
 All weights and data are hosted on Hugging Face:
 **[🤗 huuuuuuuuu/InfiniteDance](https://huggingface.co/huuuuuuuuu/InfiniteDance)**
 
-The HF repo layout mirrors this repo exactly — every file's path on HF is
-where it should live locally. The only step is to download into the repo
-root and extract the tarballs in place.
+The HF layout mirrors this repo — download into the repo root and extract the tarballs in place.
 
 ### File map (HF → local)
 
 | File on HF | Size | Place at (relative to repo root) |
 |---|---|---|
-| `models/checkpoints/dance_vqvae.pth` | 462 MB | `All_LargeDanceAR/models/checkpoints/dance_vqvae.pth` |
-| `output/exp_m2d_infinitedance/best_model_stage2.pt` | 2.3 GB | `All_LargeDanceAR/output/exp_m2d_infinitedance/best_model_stage2.pt` |
+| `models/checkpoints/dance_vqvae.pth` (3-layer Residual VQ-VAE) | 586 MB | `All_LargeDanceAR/models/checkpoints/dance_vqvae.pth` |
+| `models/checkpoints/args.json` | 2 KB | `All_LargeDanceAR/models/checkpoints/args.json` |
+| `output/exp_m2d_infinitedance/best_model_stage2.pt` | 2.15 GB | `All_LargeDanceAR/output/exp_m2d_infinitedance/best_model_stage2.pt` |
 | `InfiniteDanceData/dance/alldata_new_joint_vecs264/meta/{Mean,Std}.npy` | 2 KB ea | same path under repo root |
 | `InfiniteDanceData/DanceVQVAE/body_models/smpl/*` | 40 MB | same path under repo root |
 | `InfiniteDanceData/partition/*.txt` | <1 MB | same path under repo root |
@@ -70,10 +66,7 @@ root and extract the tarballs in place.
 | `InfiniteDanceData/musicfeature_55_allmusic_pure.tar.gz` | 3.0 GB | extract → `InfiniteDanceData/music/musicfeature_55_allmusic_pure/` |
 | `InfiniteDanceData/retrieval_s192_l384_style.tar.gz` | 839 MB | extract → `InfiniteDanceData/dance/retrieval_s192_l384_style/` |
 
-> The released `best_model_stage2.pt` **already contains the full LLaMA-3.2-1B
-> backbone**, so you do *not* need to download anything from Meta. We ship
-> the architecture `config.json` in `All_LargeDanceAR/models/Llama3.2-1B/`
-> for completeness.
+> `best_model_stage2.pt` already contains the full LLaMA-3.2-1B backbone — no separate download from Meta needed.
 
 ### One-shot download
 
@@ -104,7 +97,8 @@ cd ..
 InfiniteDance/
 ├── All_LargeDanceAR/
 │   ├── models/
-│   │   ├── checkpoints/dance_vqvae.pth                # ← VQ-VAE
+│   │   ├── checkpoints/dance_vqvae.pth                # ← 3-layer Residual VQ-VAE
+│   │   ├── checkpoints/args.json                      # ← VQ-VAE architecture config
 │   │   └── Llama3.2-1B/config.json                    # architecture only
 │   └── output/
 │       └── exp_m2d_infinitedance/
@@ -139,32 +133,18 @@ InfiniteDance/
 
 ### 1. Inference & Reproduction
 
-The model takes per-frame **MuQ embeddings** as input (`(T, 1024)` float32
-`.npy`, ~30 frames per second). Two ways to provide them:
+The model takes per-frame **MuQ embeddings** as input (`(T, 1024)` float32 `.npy`, ~30 fps).
+`infer.sh` defaults to the released test set. For your own audio, convert it first:
 
-* **Use the released test set** — download `muq_features_test_infinitedance.tar.gz`
-  from Hugging Face and extract it; this is what `infer.sh` defaults to.
-* **Use your own audio** — convert wav / mp3 to MuQ embeddings first:
-
-  ```bash
-  cd All_LargeDanceAR
-  python utils/extract_muq.py \
-      --in_dir  /path/to/your_audio_dir \
-      --out_dir ../InfiniteDanceData/music/muq_features/my_songs
-  ```
-
-  Then point `infer.sh` at the new directory:
-
-  ```bash
-  MUSIC_PATH=../InfiniteDanceData/music/muq_features/my_songs bash infer.sh
-  ```
-
-You can run the full inference pipeline (Generation → Post-processing → Visualization) using the provided shell script or by running the python scripts manually.
+```bash
+cd All_LargeDanceAR
+python utils/extract_muq.py --in_dir /path/to/audio --out_dir ../InfiniteDanceData/music/muq_features/my_songs
+MUSIC_PATH=../InfiniteDanceData/music/muq_features/my_songs bash infer.sh
+```
 
 #### Option A: Quick Start (Recommended)
 
-`infer.sh` runs Inference → tokens-to-SMPL → optional rendering, with
-anti-collapse decoding enabled by default.
+`infer.sh` runs Inference → tokens-to-SMPL → rendering, with anti-collapse decoding on by default.
 
 ```bash
 cd All_LargeDanceAR
@@ -173,10 +153,7 @@ CHECKPOINT_PATH=./output/exp_m2d_infinitedance/best_model_stage2.pt \
 bash infer.sh
 ```
 
-Common overrides: `GPU_ID`, `PROCESSES_PER_GPU`, `STYLE`, `MUSIC_LENGTH`,
-`DANCE_LENGTH`, `TEMPERATURE`, `TOP_K`, `TOP_P`, `SEED`. Anti-collapse
-decoding is enabled by default; see the comments at the top of `infer.sh`
-to tune it.
+Common overrides: `GPU_ID`, `PROCESSES_PER_GPU`, `STYLE`, `MUSIC_LENGTH`, `DANCE_LENGTH`, `TEMPERATURE`, `TOP_K`, `TOP_P`, `SEED` (see comments at the top of `infer.sh` for anti-collapse tuning).
 
 #### Option B: Manual Execution
 
@@ -192,8 +169,7 @@ python infer_llama_infinitedance.py \
     --temperature 0.8 --top_k 15 --top_p 0.95 --seed 42
 ```
 
-**Visualization Pipeline**:
-If you ran the manual inference above, proceed to visualize the results:
+**Visualization** (only needed after manual inference above):
 
 ```bash
 # 1. Convert tokens to SMPL joints (.npy)

@@ -31,7 +31,7 @@ ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, ROOT_DIR)
 os.chdir(ROOT_DIR)
 
-from models.dancellama import Music2DanceLlamaModel, MusicDanceDataset, variable_length_collate_fn
+from models.dancellama import Music2DanceLlamaModel, MusicDanceDataset, variable_length_collate_fn, GenreBalancedDistributedSampler
 from models.motion import load_vqvae_model
 from models.train_utils import _topk_correct
 
@@ -214,7 +214,7 @@ def train_worker(rank, world_size, args, codebooks_arg):
         dancedata=args.dancedata, vqvae_ckpt_path=args.vqvae_checkpoint_path,
     )
 
-    train_sampler = DistributedSampler(train_dataset, num_replicas=world_size, rank=rank, shuffle=True, seed=args.seed)
+    train_sampler = GenreBalancedDistributedSampler(train_dataset, num_replicas=world_size, rank=rank, shuffle=True, seed=args.seed, total_samples=36000)
     val_sampler = DistributedSampler(val_dataset, num_replicas=world_size, rank=rank, shuffle=False)
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size, sampler=train_sampler,
                               num_workers=args.num_workers, pin_memory=True, collate_fn=variable_length_collate_fn)
@@ -484,11 +484,19 @@ def train_worker(rank, world_size, args, codebooks_arg):
             print(f"\n[Stage{current_stage}] Epoch {epoch + 1}: train_loss={ep_loss:.4f}  train_top1(global)={ep_acc_global:.4f}")
             save_state_dict(os.path.join(args.out_dir, f"epoch_{epoch + 1}_stage{current_stage}.pt"), model.module)
 
-        # === target_acc 仅做"至少达标"信息提示,不停训(继续推 acc 更高直到 epochs 跑完)===
-        if current_stage == 2 and ep_acc_global >= args.target_train_acc and not target_acc_reached:
-            target_acc_reached = True
-            if is_main:
-                print(f"\n★ Stage 2 target_train_acc {args.target_train_acc} reached at epoch {epoch + 1} (global={ep_acc_global:.4f}). Continuing training.")
+        # === 用户要求: 过0.9存一版(不停)、过0.95存一版并停 ===
+        if current_stage == 2:
+            if ep_acc_global >= 0.90 and not getattr(args, '_saved_090', False):
+                args._saved_090 = True
+                if is_main:
+                    print(f"\n★ train_acc 0.90 reached at epoch {epoch + 1} (global={ep_acc_global:.4f}). Saved ACC090 ckpt. Continuing to 0.95.")
+                    save_state_dict(os.path.join(args.out_dir, f"epoch_{epoch + 1}_stage{current_stage}_ACC090.pt"), model.module)
+            if ep_acc_global >= 0.95 and not target_acc_reached:
+                target_acc_reached = True
+                if is_main:
+                    print(f"\n★ train_acc 0.95 reached at epoch {epoch + 1} (global={ep_acc_global:.4f}). Saved ACC095 ckpt. STOPPING.")
+                    save_state_dict(os.path.join(args.out_dir, f"epoch_{epoch + 1}_stage{current_stage}_ACC095.pt"), model.module)
+                break
 
     if is_main:
         print(f"\n=== Training done (target_acc_reached={target_acc_reached}, final stage={current_stage}) ===")

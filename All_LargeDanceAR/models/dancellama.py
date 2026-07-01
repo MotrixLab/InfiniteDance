@@ -15,9 +15,9 @@ from transformers import AutoConfig, LlamaForCausalLM
 import numpy as _np
 from utils.get_top10_mofea264 import get_top_mofea_specific_style as _get_top_mofea_specific_style
 
-_RETRIEVAL_PATH_DEFAULT = "/data2/hzy/InfiniteDance/InfiniteDanceData/dance/retrieval_s192_l384_style"
-_MOTION_BASE_DEFAULT = "/data2/hzy/InfiniteDance/InfiniteDanceData/dance/alldata_new_joint_vecs264"
-_STYLE_MAP_DEFAULT = "/data2/hzy/InfiniteDance/InfiniteDanceData/styles/all_style_map.json"
+_RETRIEVAL_PATH_DEFAULT = "../InfiniteDanceData/dance/retrieval_s192_l384_style"
+_MOTION_BASE_DEFAULT = "../InfiniteDanceData/dance/alldata_new_joint_vecs264_ft_balanced"
+_STYLE_MAP_DEFAULT = "../InfiniteDanceData/styles/all_style_map.json"
 
 def get_top10_mofea264(base_name, music_retrieval_idx, style="Popular"):
     """training-time dance_retrieval_cond getter; falls back to zeros (384,264) on miss."""
@@ -58,7 +58,7 @@ class Music2DanceLlamaModel(nn.Module):
         bridge_num_heads=8,
         retrieval_dance_len=384,
         codebooks=None,
-        llama_config_path="/data2/hzy/InfiniteDance/All_LargeDanceAR/models/Llama3.2-1B/config.json",
+        llama_config_path="models/Llama3.2-1B/config.json",
     ):
         super().__init__()
         self.vocab_size = vocab_size
@@ -388,7 +388,7 @@ class MusicDanceDataset:
 
         if self._net is None:
             raise ValueError("VQVAE model not loaded")
-        dance_retrieval_cond = get_top10_mofea264(base_name, music_retrieval_idx)
+        dance_retrieval_cond = get_top10_mofea264(base_name, music_retrieval_idx, style=genre)
 
         music_window = music_data[music_start:music_start + self.music_length]
         dance_window = dance_data[dance_start:dance_start + self.dance_raw_length]

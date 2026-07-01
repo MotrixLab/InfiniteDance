@@ -549,13 +549,13 @@ def main():
     # parser.add_argument("--std_path", required=True, type=str)
     # parser.add_argument("--checkpoint_path", required=True, type=str)
     # parser.add_argument("--vqvae_checkpoint_path", required=True, type=str)
-    parser.add_argument("--music_path", default="/data2/hzy/InfiniteDance/InfiniteDanceData/music/muq_features/test_finedance", type=str)
-    
-    parser.add_argument("--mean_path", default="/data2/hzy/InfiniteDance/InfiniteDanceData/dance/alldata_new_joint_vecs264/meta/Mean.npy", type=str)
-    parser.add_argument("--std_path", default="/data2/hzy/InfiniteDance/InfiniteDanceData/dance/alldata_new_joint_vecs264/meta/Std.npy", type=str)
-    
-    parser.add_argument("--checkpoint_path", default="/data2/hzy/InfiniteDance_opensource/All_LargeDanceAR/output/exp_m2d_infinitedance/best_model_stage2.pt", type=str)
-    parser.add_argument("--vqvae_checkpoint_path", default="/data2/hzy/InfiniteDance/All_LargeDanceAR/models/checkpoints/dance_vqvae.pth", type=str)
+    parser.add_argument("--music_path", default="../InfiniteDanceData/music/muq_features/test_finedance", type=str)
+
+    parser.add_argument("--mean_path", default="../InfiniteDanceData/dance/alldata_new_joint_vecs264/meta/Mean.npy", type=str)
+    parser.add_argument("--std_path", default="../InfiniteDanceData/dance/alldata_new_joint_vecs264/meta/Std.npy", type=str)
+
+    parser.add_argument("--checkpoint_path", default="./output/exp_m2d_infinitedance/best_model_stage2.pt", type=str)
+    parser.add_argument("--vqvae_checkpoint_path", default="./models/checkpoints/dance_vqvae.pth", type=str)
     parser.add_argument("--output_dir", default=out_dir, type=str)
     parser.add_argument("--music_length", type=int, default=320)
     parser.add_argument("--dance_length", type=int, default=288)
