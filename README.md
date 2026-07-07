@@ -65,8 +65,11 @@ The HF layout mirrors this repo — download into the repo root and extract the 
 | `InfiniteDanceData/muq_features_test_infinitedance.tar.gz` | 2.6 GB | extract → `InfiniteDanceData/music/muq_features/test_infinitedance/` |
 | `InfiniteDanceData/musicfeature_55_allmusic_pure.tar.gz` | 3.0 GB | extract → `InfiniteDanceData/music/musicfeature_55_allmusic_pure/` |
 | `InfiniteDanceData/retrieval_s192_l384_style.tar.gz` | 839 MB | extract → `InfiniteDanceData/dance/retrieval_s192_l384_style/` |
+| `InfiniteDanceData/alldata_new_joint_vecs264_ft_balanced.tar.gz` | 8.7 GB | extract → `InfiniteDanceData/dance/alldata_new_joint_vecs264_ft_balanced/` |
 
 > `best_model_stage2.pt` already contains the full LLaMA-3.2-1B backbone — no separate download from Meta needed.
+
+> **Motion features** (`alldata_new_joint_vecs264_ft_balanced/`, 10,870 clips, HumanML3D-style 264-d): an integrated corpus of **InfiniteDance (9,706) + AIST++ (911) + FineDance (156) + Motorica (97)**. Cleaned with Savitzky-Golay smoothing (window 11, polyorder 3) + rule-based artifact/tail removal for low foot-slide and jitter. Enables retrieval-conditioned inference and training from these features.
 
 ### One-shot download
 
@@ -125,7 +128,8 @@ InfiniteDance/
 | Beat-Align (BA) metric | ✅ | needs `musicfeature_55_allmusic_pure` |
 | Retrieval ablations | ✅ | uses `retrieval_s192_l384_style` |
 | **FID-k / FID-m / Div-k / Div-m** | ⚠️ partial | requires GT joints (`ourData_smplx_22_smooth_new/`), which are **not yet released**; we will add them in a follow-up upload |
-| **Training from scratch** | ⚠️ partial | requires the full 264-d motion features (`alldata_new_joint_vecs264/`), **not yet released**. Only `Mean.npy` / `Std.npy` and the tokenized version (`Infinite_MotionTokens_512_vel_processed/`) are provided so far |
+| **Training from scratch** | ✅ | 264-d motion features released as `alldata_new_joint_vecs264_ft_balanced/` (10,870 clips), plus the tokenized version and `Mean.npy` / `Std.npy` |
+| **Per-dance SMPL/SMPLX parameters (InfiniteDance clips)** | ❌ not yet released | Only the retrieved AIST++/Motorica clips ship with their own upstream SMPL(X); the ~9.7k InfiniteDance-collected clips' own SMPL fits are **TODO** |
 
 ---
 
@@ -184,6 +188,12 @@ python ./visualization/render_plot_npy.py --joints_dir ./infer_results/dance/npy
 
 `metrics.sh` runs FID-k / FID-m / Div-k / Div-m and the official Beat-Align score.
 
+Our reported numbers use `partition/test_eval861.txt` (861 clips) as the canonical
+evaluation set — the intersection of clips the model can generate for, that have
+GT joints, and that have beat-align features. Beat-Align is reproducible now
+(`musicfeature_55_allmusic_pure` is released); FID-k/m and Div-k/m additionally
+need the GT joints, which are not yet released (see table above).
+
 ```bash
 cd All_LargeDanceAR
 bash metrics.sh <pred_root> [device_id]
@@ -227,5 +237,42 @@ If you use this code or dataset in your research, please cite our work:
 }
 
 ```
+
+`alldata_new_joint_vecs264_ft_balanced` also integrates motion capture from three external
+datasets (AIST++, FineDance, Motorica). If you use this data, please also cite the original
+sources:
+
+```bibtex
+@inproceedings{li2021aistplusplus,
+  author    = {Ruilong Li and Shan Yang and David A. Ross and Angjoo Kanazawa},
+  title     = {{AI} Choreographer: Music Conditioned 3D Dance Generation with {AIST++}},
+  booktitle = {2021 IEEE/CVF International Conference on Computer Vision (ICCV)},
+  pages     = {13381--13392},
+  publisher = {IEEE},
+  year      = {2021},
+  doi       = {10.1109/ICCV48922.2021.01315},
+}
+
+@inproceedings{li2023finedance,
+  title     = {FineDance: A Fine-grained Choreography Dataset for 3D Full Body Dance Generation},
+  author    = {Li, Ronghui and Zhao, Junfan and Zhang, Yachao and Su, Mingyang and Ren, Zeping and Zhang, Han and Tang, Yansong and Li, Xiu},
+  booktitle = {Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV)},
+  year      = {2023},
+}
+
+@article{alexanderson2023listen,
+  title     = {Listen, Denoise, Action! Audio-Driven Motion Synthesis with Diffusion Models},
+  author    = {Alexanderson, Simon and Nagy, Rajmund and Beskow, Jonas and Henter, Gustav Eje},
+  year      = {2023},
+  publisher = {ACM},
+  volume    = {42},
+  number    = {4},
+  doi       = {10.1145/3592458},
+  journal   = {ACM Trans. Graph.},
+  articleno = {44},
+  numpages  = {20},
+}
+```
+
 
 
