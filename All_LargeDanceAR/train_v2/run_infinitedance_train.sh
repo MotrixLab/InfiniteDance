@@ -10,14 +10,14 @@ cd "$REPO_DIR"
 
 GPUS=${GPUS:-0,1,2,3}
 WS=${WS:-4}
-BATCH=${BATCH:-8}
+BATCH=${BATCH:-16}
 ACCUM=${ACCUM:-1}
-S2_LR=${S2_LR:-2e-5}
+S2_LR=${S2_LR:-1e-4}
 FREEZE=${FREEZE:-0}
 
-STAGE1_EP=${STAGE1_EP:-0}
-STAGE2_EP=${STAGE2_EP:-30}
-TARGET_ACC=${TARGET_ACC:-0.99}
+STAGE1_EP=${STAGE1_EP:-2}
+STAGE2_EP=${STAGE2_EP:-60}
+TARGET_ACC=${TARGET_ACC:-0.95}
 PRECISION=${PRECISION:-bf16}
 WD=${WD:-0.10}
 WARMUP=${WARMUP:-50}
@@ -55,7 +55,7 @@ CMD=(${PY} train_v2/train_infinitedance.py
   --out_dir "${OUT}"
   --world_size ${WS} --MASTER_PORT ${MASTER_PORT}
   --music_dir ${DATA_ROOT}/music/muq_features
-  --dance_dir ${DATA_ROOT}/dance/Infinite_MotionTokens_512_vel_processed
+  --dance_dir ${DATA_ROOT}/dance/Infinite_MotionTokens_512x1024_3layer_cleandata
   --data_split_dir ${DATA_ROOT}/partition
   --style_dir ${DATA_ROOT}/styles/Alldata
   --dancedata All --n_bins 2

@@ -61,7 +61,7 @@ The HF layout mirrors this repo — download into the repo root and extract the 
 | `InfiniteDanceData/DanceVQVAE/body_models/smpl/*` | 40 MB | same path under repo root |
 | `InfiniteDanceData/partition/*.txt` | <1 MB | same path under repo root |
 | `InfiniteDanceData/styles/all_style_map.json` | 0.5 MB | same path under repo root |
-| `InfiniteDanceData/Infinite_MotionTokens_512_vel_processed.tar.gz` | 14 MB | extract → `InfiniteDanceData/dance/Infinite_MotionTokens_512_vel_processed/` |
+| `InfiniteDanceData/Infinite_MotionTokens_512x1024_3layer_cleandata.tar.gz` | 15 MB | extract → `InfiniteDanceData/dance/Infinite_MotionTokens_512x1024_3layer_cleandata/` |
 | `InfiniteDanceData/muq_features_test_infinitedance.tar.gz` | 2.6 GB | extract → `InfiniteDanceData/music/muq_features/test_infinitedance/` |
 | `InfiniteDanceData/musicfeature_55_allmusic_pure.tar.gz` | 3.0 GB | extract → `InfiniteDanceData/music/musicfeature_55_allmusic_pure/` |
 | `InfiniteDanceData/retrieval_s192_l384_style.tar.gz` | 839 MB | extract → `InfiniteDanceData/dance/retrieval_s192_l384_style/` |
@@ -87,7 +87,7 @@ huggingface-cli download huuuuuuuuu/InfiniteDance \
 # extract the four tarballs in place
 cd InfiniteDanceData
 mkdir -p dance music/muq_features
-tar -xzf Infinite_MotionTokens_512_vel_processed.tar.gz -C dance/
+tar -xzf Infinite_MotionTokens_512x1024_3layer_cleandata.tar.gz -C dance/
 tar -xzf retrieval_s192_l384_style.tar.gz              -C dance/
 tar -xzf musicfeature_55_allmusic_pure.tar.gz          -C music/
 tar -xzf muq_features_test_infinitedance.tar.gz        -C music/muq_features/
@@ -109,7 +109,7 @@ InfiniteDance/
 └── InfiniteDanceData/
     ├── dance/
     │   ├── alldata_new_joint_vecs264/meta/{Mean,Std}.npy
-    │   ├── Infinite_MotionTokens_512_vel_processed/   # ← extracted
+    │   ├── Infinite_MotionTokens_512x1024_3layer_cleandata/  # ← extracted (matches released 3-layer RVQVAE)
     │   └── retrieval_s192_l384_style/                 # ← extracted
     ├── music/
     │   ├── muq_features/test_infinitedance/           # ← extracted (MuQ test set)
