@@ -124,12 +124,17 @@ InfiniteDance/
 | Task | Status | Notes |
 |---|---|---|
 | Inference on the released MuQ test set | ✅ | `bash infer.sh` |
-| Inference on your own audio (mp3 / wav) | ✅ | via `utils/extract_muq.py` |
+| Inference on your own audio (mp3 / wav) | ⚠️ partial | MuQ extraction is available, but retrieval also needs a matching precomputed JSON; live RetrievalNet assets are not yet released |
 | Beat-Align (BA) metric | ✅ | needs `musicfeature_55_allmusic_pure` |
 | Retrieval ablations | ✅ | uses `retrieval_s192_l384_style` |
 | **FID-k / FID-m / Div-k / Div-m** | ⚠️ partial | requires GT joints (`ourData_smplx_22_smooth_new/`), which are **not yet released**; we will add them in a follow-up upload |
 | **Training from scratch** | ✅ | 264-d motion features released as `alldata_new_joint_vecs264_ft_balanced/` (10,870 clips), plus the tokenized version and `Mean.npy` / `Std.npy` |
 | **Per-dance SMPL/SMPLX parameters (InfiniteDance clips)** | ❌ not yet released | Only the retrieved AIST++/Motorica clips ship with their own upstream SMPL(X); the ~9.7k InfiniteDance-collected clips' own SMPL fits are **TODO** |
+
+Inference on the released test music uses the precomputed
+`retrieval_s192_l384_style` JSON cache. The live RetrievalNet fallback is not
+part of this release; a missing per-song JSON now reports the expected cache
+location directly.
 
 ---
 
@@ -273,6 +278,5 @@ sources:
   numpages  = {20},
 }
 ```
-
 
 

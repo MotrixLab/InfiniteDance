@@ -1354,6 +1354,8 @@ def get_top_mofea_specific_style(name: str = None,
                               motionembedding_dir="../InfiniteDanceData/dance/motionembeding",
                               retrieval_path="../InfiniteDanceData/dance/retrieval_s192_l384_style",
                               motion_base="../InfiniteDanceData/dance/alldata_new_joint_vecs264_ft_balanced",
+                              motiontoken_dir="../InfiniteDanceData/dance/Infinite_MotionTokens_512x1024_3layer_cleandata",
+                              v6_2_token_dir="../InfiniteDanceData/ALL_SD_ID_DATA/motion_264_30fps_tokens_1layer_windowed",
                               style_map_path="../InfiniteDanceData/styles/all_style_map.json",
                               style="Popular",
                               meta_path="meta",
@@ -1383,16 +1385,13 @@ def get_top_mofea_specific_style(name: str = None,
                     exclude_names=exclude_names
                 )
         else:
-            from RetrievalNet.configs import get_config
-            from RetrievalNet.datasets import EvaluatorModelWrapper
-            eval_wrapper = EvaluatorModelWrapper(get_config(config_path), device)
-            if motion is None:
-                motion=np.load(f"/data2/hzy/InfiniteDance/InfiniteDanceData/music/musicfeature_55_allmusic_pure/{name}.npy")[idx*96:idx*96+384]
-                if motion.shape[0] < 384:
-                    pad_length = 384 - motion.shape[0]
-                    motion = np.pad(motion, ((0, pad_length), (0, 0)), mode='wrap')
-
-            top10_results = get_top10_similar_mofea_features(motion, eval_wrapper, motionembedding_dir, device=device, top_k=top_k, exclude_names=exclude_names)
+            raise FileNotFoundError(
+                f"Retrieval cache not found: {json_path}. "
+                "Download retrieval_s192_l384_style.tar.gz as documented in README.md "
+                "and extract it under InfiniteDanceData/dance/. "
+                "The public inference pipeline uses the released cache; live RetrievalNet "
+                "fallback is not included."
+            )
     else:
         from RetrievalNet.configs import get_config
         from RetrievalNet.datasets import EvaluatorModelWrapper
@@ -1486,8 +1485,6 @@ def get_top_mofea_specific_style(name: str = None,
                 start_idx, end_idx = map(int, frame_part.split('_'))
                 top10_names_indices.append((video_part, start_idx, end_idx))
 
-    motiontoken_dir = "/data2/hzy/InfiniteDance/InfiniteDanceData/dance/Infinite_MotionTokens_512_vel_processed"
-    v6_2_token_dir = "/data2/hzy/InfiniteDance/InfiniteDanceData/ALL_SD_ID_DATA/motion_264_30fps_tokens_1layer_windowed"
     token_segments = []
 
     use_v6_2 = (infertype == "infinitedanceplus")

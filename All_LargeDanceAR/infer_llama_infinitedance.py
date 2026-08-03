@@ -14,7 +14,7 @@ import numpy as np
 import torch
 from tqdm import tqdm
 from utils.get_top10_mofea264 import (
-    get_top_mofea, get_top_mofea_specific_style,
+    get_top_mofea_specific_style,
     get_top_mofea_specific_style_exclude_aistpp_finedance,
     get_top_mofea_specific_style_only_aistpp_finedance,
 )
@@ -444,12 +444,6 @@ def process_music_files(process_id, gpu_id, music_files, args, output_dir, dance
                     sample_num = int(match.group(1))
                     existing_samples.add(sample_num)
 
-            first_retrieval_idx = 0
-            _, genre_proportions, top_genre_from_retrieval, _, _, _ = get_top_mofea(
-                name=music_file_basename,
-                idx=first_retrieval_idx
-            )
-
             matched_genre = None
             for genre in GENRES:
                 if genre.lower() in music_file_basename.lower():
@@ -458,8 +452,6 @@ def process_music_files(process_id, gpu_id, music_files, args, output_dir, dance
 
             if matched_genre:
                 final_genre = matched_genre
-            elif top_genre_from_retrieval and top_genre_from_retrieval in GENRE_TO_IDX:
-                final_genre = top_genre_from_retrieval
             else:
                 final_genre = args.style
 
