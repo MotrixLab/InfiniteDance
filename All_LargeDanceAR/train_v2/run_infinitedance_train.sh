@@ -27,6 +27,7 @@ COND_DROP_PROB=${COND_DROP_PROB:-0.15}
 
 # Optional warm-start checkpoint (set to "" to train from scratch)
 PREV_CKPT=${PREV_CKPT:-}
+LLAMA_DIR=${LLAMA_DIR:-./models/Llama3.2-1B}
 
 DATA_ROOT=${DATA_ROOT:-../InfiniteDanceData}
 
@@ -60,6 +61,7 @@ CMD=(${PY} train_v2/train_infinitedance.py
   --style_dir ${DATA_ROOT}/styles/Alldata
   --dancedata All --n_bins 2
   --style_embedding_dim 64
+  --pretrained_model_name "${LLAMA_DIR}"
   --vqvae_checkpoint_path ./models/checkpoints/dance_vqvae.pth
   --mean_path ${DATA_ROOT}/dance/alldata_new_joint_vecs264/meta/Mean.npy
   --std_path  ${DATA_ROOT}/dance/alldata_new_joint_vecs264/meta/Std.npy

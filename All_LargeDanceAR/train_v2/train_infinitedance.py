@@ -236,6 +236,7 @@ def train_worker(rank, world_size, args, codebooks_arg):
         dance_retrieval_cond_dim=264, music_len=args.music_length,
         retrieval_dance_len=384, codebooks=codebooks_arg,
         llama_config_path=args.llama_config_path,
+        require_pretrained_llama=args.resume_from_checkpoint is None,
     )
 
     # === optional warm-start from a previous checkpoint ===
