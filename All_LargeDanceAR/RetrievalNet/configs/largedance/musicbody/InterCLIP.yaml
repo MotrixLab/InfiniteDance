@@ -12,7 +12,7 @@ MOTION_REP: global
 FINETUNE: False
 
 TransEncoder:
-  max_seq_len: 600
+  max_seq_len: 384
   input_feats: 264          
   latent_dim: 256
   num_heads: 4
@@ -24,7 +24,7 @@ TransEncoder:
   cls_token: True
 
 CondEncoder:
-  max_seq_len: 600
+  max_seq_len: 384
   input_feats: 55          # 55+ 22*3
   latent_dim: 256
   num_heads: 4

@@ -54,9 +54,10 @@ The HF layout mirrors this repo — download into the repo root and extract the 
 
 | File on HF | Size | Place at (relative to repo root) |
 |---|---|---|
-| `models/checkpoints/dance_vqvae.pth` (3-layer Residual VQ-VAE) | 586 MB | `All_LargeDanceAR/models/checkpoints/dance_vqvae.pth` |
-| `models/checkpoints/args.json` | 2 KB | `All_LargeDanceAR/models/checkpoints/args.json` |
-| `output/exp_m2d_infinitedance/best_model_stage2.pt` | 2.15 GB | `All_LargeDanceAR/output/exp_m2d_infinitedance/best_model_stage2.pt` |
+| `All_LargeDanceAR/models/checkpoints/dance_vqvae.pth` (3-layer Residual VQ-VAE) | 586 MB | same path under repo root |
+| `All_LargeDanceAR/models/checkpoints/args.json` | 2 KB | same path under repo root |
+| `All_LargeDanceAR/output/exp_m2d_infinitedance/best_model_stage2.pt` | 2.15 GB | same path under repo root |
+| `All_LargeDanceAR/models/retrievalnet/retrievalnet_audio55_motion264.ckpt` | 71 MB | same path under repo root |
 | `InfiniteDanceData/dance/alldata_new_joint_vecs264/meta/{Mean,Std}.npy` | 2 KB ea | same path under repo root |
 | `InfiniteDanceData/DanceVQVAE/body_models/smpl/*` | 40 MB | same path under repo root |
 | `InfiniteDanceData/partition/*.txt` | <1 MB | same path under repo root |
@@ -66,10 +67,17 @@ The HF layout mirrors this repo — download into the repo root and extract the 
 | `InfiniteDanceData/musicfeature_55_allmusic_pure.tar.gz` | 3.0 GB | extract → `InfiniteDanceData/music/musicfeature_55_allmusic_pure/` |
 | `InfiniteDanceData/retrieval_s192_l384_style.tar.gz` | 839 MB | extract → `InfiniteDanceData/dance/retrieval_s192_l384_style/` |
 | `InfiniteDanceData/alldata_new_joint_vecs264_ft_balanced.tar.gz` | 8.7 GB | extract → `InfiniteDanceData/dance/alldata_new_joint_vecs264_ft_balanced/` |
+| `InfiniteDanceData/dance/retrievalnet_motion_embeddings.npz` | ~60 MB | same path under repo root |
+| `InfiniteDanceData/dance/evaluation_features_train8235.npz` | ~4 MB | same path under repo root |
+| `InfiniteDanceData/test_eval861_joint_vecs264.tar` | ~1.5 GB | extract → `InfiniteDanceData/dance/test_eval861_joint_vecs264/` |
+| `InfiniteDanceData/infinitedance_smplx_smooth.tar` | ~4.2 GB | extract → `InfiniteDanceData/dance/infinitedance_smplx_smooth/` |
 
-> `best_model_stage2.pt` already contains the full LLaMA-3.2-1B backbone — no separate download from Meta needed.
+> For inference, `best_model_stage2.pt` already contains the full LLaMA-3.2-1B backbone — no separate download from Meta is needed.
 
 > **Motion features** (`alldata_new_joint_vecs264_ft_balanced/`, 10,870 clips, HumanML3D-style 264-d): an integrated corpus of **InfiniteDance (9,706) + AIST++ (911) + FineDance (156) + Motorica (97)**. Cleaned with Savitzky-Golay smoothing (window 11, polyorder 3) + rule-based artifact/tail removal for low foot-slide and jitter. Enables retrieval-conditioned inference and training from these features.
+
+> **SMPL-X format:** each `.pkl` is a `joblib`-serialized dictionary containing
+> `body_pose`, `global_orient`, and `transl`; load it with `joblib.load`.
 
 ### One-shot download
 
@@ -84,11 +92,14 @@ huggingface-cli download huuuuuuuuu/InfiniteDance \
     --local-dir . \
     --local-dir-use-symlinks False
 
-# extract the four tarballs in place
+# extract the release tarballs in place
 cd InfiniteDanceData
 mkdir -p dance music/muq_features
 tar -xzf Infinite_MotionTokens_512x1024_3layer_cleandata.tar.gz -C dance/
 tar -xzf retrieval_s192_l384_style.tar.gz              -C dance/
+tar -xzf alldata_new_joint_vecs264_ft_balanced.tar.gz  -C dance/
+tar -xf test_eval861_joint_vecs264.tar                 -C dance/
+tar -xf infinitedance_smplx_smooth.tar                 -C dance/
 tar -xzf musicfeature_55_allmusic_pure.tar.gz          -C music/
 tar -xzf muq_features_test_infinitedance.tar.gz        -C music/muq_features/
 cd ..
@@ -102,6 +113,7 @@ InfiniteDance/
 │   ├── models/
 │   │   ├── checkpoints/dance_vqvae.pth                # ← 3-layer Residual VQ-VAE
 │   │   ├── checkpoints/args.json                      # ← VQ-VAE architecture config
+│   │   ├── retrievalnet/retrievalnet_audio55_motion264.ckpt
 │   │   └── Llama3.2-1B/config.json                    # architecture only
 │   └── output/
 │       └── exp_m2d_infinitedance/
@@ -109,8 +121,13 @@ InfiniteDance/
 └── InfiniteDanceData/
     ├── dance/
     │   ├── alldata_new_joint_vecs264/meta/{Mean,Std}.npy
+    │   ├── alldata_new_joint_vecs264_ft_balanced/     # ← released training motion features
     │   ├── Infinite_MotionTokens_512x1024_3layer_cleandata/  # ← extracted (matches released 3-layer RVQVAE)
-    │   └── retrieval_s192_l384_style/                 # ← extracted
+    │   ├── retrieval_s192_l384_style/                 # ← released test cache
+    │   ├── retrievalnet_motion_embeddings.npz         # ← live RetrievalNet corpus embeddings
+    │   ├── evaluation_features_train8235.npz          # ← FID/Div GT features
+    │   ├── test_eval861_joint_vecs264/                # ← canonical test GT
+    │   └── infinitedance_smplx_smooth/                # ← per-clip SMPL-X parameters
     ├── music/
     │   ├── muq_features/test_infinitedance/           # ← extracted (MuQ test set)
     │   └── musicfeature_55_allmusic_pure/             # ← extracted (BA metric)
@@ -124,17 +141,16 @@ InfiniteDance/
 | Task | Status | Notes |
 |---|---|---|
 | Inference on the released MuQ test set | ✅ | `bash infer.sh` |
-| Inference on your own audio (mp3 / wav) | ⚠️ partial | MuQ extraction is available, but retrieval also needs a matching precomputed JSON; live RetrievalNet assets are not yet released |
+| Inference on your own audio (mp3 / wav) | ✅ | MuQ extraction plus the released live RetrievalNet pipeline below |
 | Beat-Align (BA) metric | ✅ | needs `musicfeature_55_allmusic_pure` |
 | Retrieval ablations | ✅ | uses `retrieval_s192_l384_style` |
-| **FID-k / FID-m / Div-k / Div-m** | ⚠️ partial | requires GT joints (`ourData_smplx_22_smooth_new/`), which are **not yet released**; we will add them in a follow-up upload |
-| **Training from scratch** | ✅ | 264-d motion features released as `alldata_new_joint_vecs264_ft_balanced/` (10,870 clips), plus the tokenized version and `Mean.npy` / `Std.npy` |
-| **Per-dance SMPL/SMPLX parameters (InfiniteDance clips)** | ❌ not yet released | Only the retrieved AIST++/Motorica clips ship with their own upstream SMPL(X); the ~9.7k InfiniteDance-collected clips' own SMPL fits are **TODO** |
+| **FID-k / FID-m / Div-k / Div-m** | ✅ | precomputed GT kinetic/manual features and canonical split are released; test GT vectors are also included |
+| **Training from scratch** | ✅ with Llama access | motion features/tokens are released; obtain the official Llama-3.2-1B weights from Meta before fresh training |
+| **Per-dance SMPL-X parameters (InfiniteDance clips)** | ✅ | 9,748 project-owned fits in `infinitedance_smplx_smooth/` |
 
-Inference on the released test music uses the precomputed
-`retrieval_s192_l384_style` JSON cache. The live RetrievalNet fallback is not
-part of this release; a missing per-song JSON now reports the expected cache
-location directly.
+Inference on the released test music uses the faster precomputed
+`retrieval_s192_l384_style` JSON cache. RetrievalNet source, checkpoint,
+55-d audio preprocessing, and motion embeddings are also released for new audio.
 
 ---
 
@@ -148,6 +164,11 @@ The model takes per-frame **MuQ embeddings** as input (`(T, 1024)` float32 `.npy
 ```bash
 cd All_LargeDanceAR
 python utils/extract_muq.py --in_dir /path/to/audio --out_dir ../InfiniteDanceData/music/muq_features/my_songs
+
+# Build a matching retrieval cache for every new song (repeat per file).
+python RetrievalNet/retrieve.py /path/to/audio/song.wav \
+  ../InfiniteDanceData/dance/retrieval_s192_l384_style/song.json
+
 MUSIC_PATH=../InfiniteDanceData/music/muq_features/my_songs bash infer.sh
 ```
 
@@ -193,11 +214,12 @@ python ./visualization/render_plot_npy.py --joints_dir ./infer_results/dance/npy
 
 `metrics.sh` runs FID-k / FID-m / Div-k / Div-m and the official Beat-Align score.
 
-Our reported numbers use `partition/test_eval861.txt` (861 clips) as the canonical
-evaluation set — the intersection of clips the model can generate for, that have
-GT joints, and that have beat-align features. Beat-Align is reproducible now
-(`musicfeature_55_allmusic_pure` is released); FID-k/m and Div-k/m additionally
-need the GT joints, which are not yet released (see table above).
+Predictions are selected with `partition/test_eval861.txt` (861 clips), the
+intersection with generation outputs, GT motion, and beat features. Following
+the reported protocol, FID/Div compare those predictions with the clean training
+distribution selected by `partition/All_cleandata_train.txt`; `metrics.sh` uses
+the released kinetic/manual GT features directly. The corresponding 861 raw
+264-d GT vectors are released for inspection and independent evaluation.
 
 ```bash
 cd All_LargeDanceAR
@@ -208,14 +230,16 @@ bash metrics.sh <pred_root> [device_id]
 ### 2. Training
 
 Two-stage training (stage 1: bridges + adapters, LLM frozen; stage 2: full fine-tune)
-is run via DDP. Edit `train.sh` (or pass env vars) and launch:
+is run via DDP. The InfiniteDance inference checkpoint contains the Llama
+backbone, but a fresh training run must start from the official Meta
+Llama-3.2-1B weights. Place those files locally and pass `LLAMA_DIR`:
 
 ```bash
 cd All_LargeDanceAR
 
 # Default: 4 GPUs, bf16, with regularization (weight_decay=0.10,
 # llama_dropout=0.15, cond_drop_prob=0.15)
-DATA_ROOT=../InfiniteDanceData bash train.sh
+LLAMA_DIR=/path/to/Llama-3.2-1B DATA_ROOT=../InfiniteDanceData bash train.sh
 
 # Other GPU counts
 GPUS=0,1 WS=2 DATA_ROOT=../InfiniteDanceData bash train.sh
@@ -223,6 +247,17 @@ GPUS=0,1 WS=2 DATA_ROOT=../InfiniteDanceData bash train.sh
 # Warm-start from a previous stage-2 checkpoint
 PREV_CKPT=./output/m2d_llama/<run>/epoch_X_stage2.pt bash train.sh
 ```
+
+---
+
+## License
+
+InfiniteDance project-owned code, checkpoints, model weights, annotations, and
+data resources are available for **non-commercial academic research, education,
+and evaluation only** under the [InfiniteDance Non-Commercial Research
+License](LICENSE). Commercial use, including internal commercial research,
+requires prior written permission. Third-party components and incorporated
+datasets remain governed by their original terms.
 
 ---
 
@@ -278,5 +313,3 @@ sources:
   numpages  = {20},
 }
 ```
-
-

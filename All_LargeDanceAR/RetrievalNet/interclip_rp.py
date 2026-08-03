@@ -1,10 +1,7 @@
-import clip
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from RetrievalNet.models import *
-from RetrievalNet.models.rp_clip.clip_encoder import CLIPTextEncoder
 from RetrievalNet.models.rp_clip.trans_ae import TransEncoder
 
 # MotionEncoder()

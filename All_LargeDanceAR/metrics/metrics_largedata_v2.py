@@ -107,7 +107,34 @@ def normalize_one(feat):
     
     return (feat - mean) / (std + 1e-10)
 
-def quantized_metrics(predicted_pkl_root, gt_pkl_root):
+def _load_feature_dir(root, subdir, names=None):
+    feature_dir = os.path.join(root, subdir)
+    if names is None:
+        files = sorted(name for name in os.listdir(feature_dir) if name.endswith('.npy'))
+    else:
+        files = [f'{name}.npy' for name in names if os.path.isfile(os.path.join(feature_dir, f'{name}.npy'))]
+    if not files:
+        raise FileNotFoundError(f'No evaluation features found in {feature_dir}')
+    return [np.load(os.path.join(feature_dir, name)) for name in files]
+
+
+def _load_gt_features(source, names=None):
+    if os.path.isfile(source) and source.endswith('.npz'):
+        with np.load(source) as archive:
+            archive_names = [str(name) for name in archive['names']]
+            kinetic = archive['kinetic']
+            manual = archive['manual']
+        selected = set(names) if names is not None else None
+        indices = [index for index, name in enumerate(archive_names)
+                   if selected is None or name in selected]
+        if not indices:
+            raise ValueError(f'No requested GT names found in {source}')
+        return kinetic[indices], manual[indices]
+    return (_load_feature_dir(source, 'kinetic_features', names),
+            _load_feature_dir(source, 'manual_features_new', names))
+
+
+def quantized_metrics(predicted_pkl_root, gt_pkl_root, gt_names=None):
     pred_features_k = []
     pred_features_m = []
     gt_freatures_k = []
@@ -115,11 +142,9 @@ def quantized_metrics(predicted_pkl_root, gt_pkl_root):
 
 
     time1 = time.time()
-    pred_features_k = [np.load(os.path.join(predicted_pkl_root, 'kinetic_features', pkl))  for pkl in os.listdir(os.path.join(predicted_pkl_root, 'kinetic_features'))]
-    pred_features_m = [np.load(os.path.join(predicted_pkl_root, 'manual_features_new', pkl)) for pkl in os.listdir(os.path.join(predicted_pkl_root, 'manual_features_new'))]
-    
-    gt_freatures_k = [np.load(os.path.join(gt_pkl_root, 'kinetic_features', pkl)) for pkl in os.listdir(os.path.join(gt_pkl_root, 'kinetic_features'))]
-    gt_freatures_m = [np.load(os.path.join(gt_pkl_root, 'manual_features_new', pkl)) for pkl in os.listdir(os.path.join(gt_pkl_root, 'manual_features_new'))]
+    pred_features_k = _load_feature_dir(predicted_pkl_root, 'kinetic_features')
+    pred_features_m = _load_feature_dir(predicted_pkl_root, 'manual_features_new')
+    gt_freatures_k, gt_freatures_m = _load_gt_features(gt_pkl_root, gt_names)
     time2 = time.time()
     
     pred_features_k = np.stack(pred_features_k)  # Nx72 p40
@@ -344,6 +369,9 @@ if __name__ == '__main__':
     # parser.add_argument("--pred_root", type=str, default="/data1/hzy/HumanMotion/InfiniteDance/All_LargeDanceAR/output/infer/alldata/dance100_110_true250716_2213/dance/npy/joints", help="预测数据目录")
     parser.add_argument("--gt_root", type=str, default="/data2/hzy/InfiniteDance/InfiniteDanceData/dance/ourData_smplx_22_smooth_new/new_joint_vecs264_vel", help="Ground Truth 数据目录")
 
+    parser.add_argument("--gt_list", type=str, default=None,
+                        help="Optional split list used to select GT feature files")
+
     parser.add_argument("--pred_root", type=str, default="/data2/hzy/InfiniteDance_opensource/All_LargeDanceAR/infer/infer_unseen/dance_250129_1057/dance/npy/joints/over60s")
     parser.add_argument("--max_frames", type=int, default=0, 
                        help="最大评估帧数，默认1024。设置为0或负数表示评估完整序列")
@@ -366,5 +394,8 @@ if __name__ == '__main__':
     # calc_save_feats_dir(gt_root, max_frames=max_frames)
     calc_save_feats_dir(pred_root, max_frames=max_frames)
 
-    print(quantized_metrics(pred_root, gt_root))
-
+    gt_names = None
+    if args.gt_list:
+        with open(args.gt_list, 'r', encoding='utf-8') as handle:
+            gt_names = [line.strip() for line in handle if line.strip()]
+    print(quantized_metrics(pred_root, gt_root, gt_names))

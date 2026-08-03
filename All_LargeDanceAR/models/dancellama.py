@@ -59,6 +59,7 @@ class Music2DanceLlamaModel(nn.Module):
         retrieval_dance_len=384,
         codebooks=None,
         llama_config_path="models/Llama3.2-1B/config.json",
+        require_pretrained_llama=False,
     ):
         super().__init__()
         self.vocab_size = vocab_size
@@ -74,12 +75,18 @@ class Music2DanceLlamaModel(nn.Module):
         #   (2) Otherwise build from config only (random init). This is fine
         #       for inference because the released checkpoint already contains
         #       all 1.14B parameters and will overwrite the random init.
-        import os as _os
-        llama_dir = _os.path.dirname(llama_config_path)
+        llama_dir = pretrained_model_name
         try:
             self.llama = LlamaForCausalLM.from_pretrained(llama_dir)
             print(f"[Music2DanceLlamaModel] LLaMA loaded from {llama_dir}")
-        except Exception:
+        except Exception as exc:
+            if require_pretrained_llama:
+                raise FileNotFoundError(
+                    f"Training requires the official Llama-3.2-1B weights at {llama_dir}. "
+                    "Request access from Meta, download them locally, and pass "
+                    "--pretrained_model_name. The released InfiniteDance checkpoint "
+                    "contains the backbone for inference only."
+                ) from exc
             config = AutoConfig.from_pretrained(llama_config_path)
             self.llama = LlamaForCausalLM(config=config)
             print(f"[Music2DanceLlamaModel] LLaMA built from config (weights will come from released checkpoint)")

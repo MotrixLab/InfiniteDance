@@ -1,0 +1,33 @@
+InfiniteDance Non-Commercial Research License
+
+Copyright (c) 2026 InfiniteDance Authors and MotrixLab
+
+Permission is granted to use, copy, modify, and redistribute the InfiniteDance
+materials, including the project-owned source code, model architecture,
+checkpoints, model weights, annotations, and data resources (the "Materials"),
+solely for non-commercial academic research, education, and evaluation,
+subject to the following conditions:
+
+1. This license and the above copyright notice must be included with all copies
+   or substantial portions of the Materials.
+2. Publications and other public results produced using the Materials must cite
+   the InfiniteDance paper as described in the project README.
+3. The Materials and derivatives may not be used, directly or indirectly, for
+   commercial purposes or for monetary compensation without prior written
+   permission from the copyright holders. This includes commercial products,
+   paid services, internal commercial research, and commercial model training.
+4. The names InfiniteDance, MotrixLab, and the contributors may not be used to
+   endorse or promote derived products without prior written permission.
+5. Third-party code, models, and datasets included in or referenced by this
+   project remain subject to their original licenses and terms. This license
+   does not grant rights that the copyright holders do not possess.
+
+For commercial licensing, contact the project maintainers through the official
+repository: https://github.com/MotrixLab/InfiniteDance
+
+THE MATERIALS ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM,
+OUT OF, OR IN CONNECTION WITH THE MATERIALS OR THE USE OF THE MATERIALS.

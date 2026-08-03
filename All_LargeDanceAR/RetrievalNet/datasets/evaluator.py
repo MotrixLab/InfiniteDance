@@ -1,4 +1,5 @@
 import copy
+import os
 from collections import OrderedDict
 from os.path import join as pjoin
 
@@ -9,7 +10,6 @@ from RetrievalNet.datasets.audio55mofea264 import AudioMotion_mb
 from RetrievalNet.datasets.audiomotion import AudioMotion
 # from datasets.evaluator_models import InterCLIP
 from RetrievalNet.interclip_rp import InterCLIP_AudioJoints, InterCLIP_RP
-from RetrievalNet.models import *
 from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
 
@@ -180,11 +180,20 @@ def build_InterCLIP_RP(cfg):
 
 
 
-def build_InterCLIP_AudioJoints(cfg):
+def build_InterCLIP_AudioJoints(cfg, checkpoint_path=None):
     model = InterCLIP_AudioJoints(cfg)
-    # checkpoint = torch.load(pjoin('/data1/hzy/HumanMotion/RetrievalNet/checkpoints/AInterClip_Audio55Motion264/0512/train/bc256_s100l384_drop0.2_lr1e-4/model/epoch=999-step=241000.ckpt'),map_location="cpu")
-    checkpoint = torch.load(pjoin('/data2/hzy/InfiniteDance/All_LargeDanceAR/RetrievalNet/checkpoints/AInterClip_Audio55Motion264/0512/train/bc256_s100l384_drop0.2_lr1e-4/model/epoch=999-step=241000.ckpt'),map_location="cpu")
-    # checkpoint = torch.load(pjoin('/data2/hzy/InfiniteDance/All_LargeDanceAR/RetrievalNet/checkpoints/AInterClip_Audio55Motion264/0930/train/bc256_s150l600_drop0.2_lr1e-4/model/epoch=999-step=119000.ckpt'),map_location="cpu")
+    if checkpoint_path is None:
+        checkpoint_path = os.environ.get(
+            "INFINITEDANCE_RETRIEVALNET_CHECKPOINT",
+            pjoin("models", "retrievalnet", "retrievalnet_audio55_motion264.ckpt"),
+        )
+    if not os.path.isfile(checkpoint_path):
+        raise FileNotFoundError(
+            f"RetrievalNet checkpoint not found: {checkpoint_path}. "
+            "Download models/retrievalnet/retrievalnet_audio55_motion264.ckpt "
+            "from huuuuuuuuu/InfiniteDance."
+        )
+    checkpoint = torch.load(checkpoint_path, map_location="cpu")
 
     for k in list(checkpoint["state_dict"].keys()):
         if "model." == k[:6]:
