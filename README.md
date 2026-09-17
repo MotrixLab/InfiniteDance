@@ -2,7 +2,7 @@
 
 [![ECCV 2026](https://img.shields.io/badge/ECCV-2026-3b5998.svg)](https://eccv.ecva.net/virtual/2026/poster/3684)
 [![Paper](https://img.shields.io/badge/Paper-ECCV%202026-b31b1b.svg)](https://eccv.ecva.net/virtual/2026/poster/3684)
-[![Project Page](https://img.shields.io/badge/Project-Homepage-008080?logo=googlechrome&logoColor=white)](https://infinitedance.github.io/#/)
+[![Project Page](https://img.shields.io/badge/Project-Homepage-008080?logo=googlechrome&logoColor=white)](https://huzhongyyuan.github.io/InfiniteDance/)
 [![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Data%20%26%20Weights-ffc107?labelColor=yellow)](https://huggingface.co/huuuuuuuuu/InfiniteDance)
 [![License: Non-Commercial](https://img.shields.io/badge/license-Non--Commercial-red.svg)](LICENSE)
 
