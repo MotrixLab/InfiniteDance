@@ -211,7 +211,7 @@ def train_llama_music2dance(rank, world_size, args, codebooks_arg, MASTER_PORT):
             dance_dir=args.dance_dir,
             data_split_dir=args.data_split_dir,
             style_dir=args.style_dir,
-            split="eval",
+            split="val" if args.dancedata == "All" else "eval",
             music_length=args.music_length,
             dance_length=args.dance_length,
             max_samples=args.max_val_samples,

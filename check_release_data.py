@@ -21,7 +21,7 @@ def inspect(root, split):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--data-root", type=Path, default=Path(__file__).resolve().parent / "InfiniteDanceData")
-    parser.add_argument("--splits", nargs="+", default=["All_train", "All_eval"])
+    parser.add_argument("--splits", nargs="+", default=["All_train", "All_val"])
     parser.add_argument("--report", type=Path)
     args = parser.parse_args()
     report = {split: inspect(args.data_root, split) for split in args.splits}

@@ -247,10 +247,14 @@ GPUS=0,1 WS=2 LLAMA_DIR=/path/to/Llama-3.2-1B \
   DATA_ROOT=../InfiniteDanceData bash train.sh --batch_size 16
 ```
 
-The generator currently reads `All_train.txt` for training and `All_eval.txt`
-for validation, as in the existing training entry. `All_val.txt` is a separate
-historical list and is not substituted for `All_eval.txt`. Per-clip style JSONs
-are read from `styles/Alldata/`; the consolidated style map is used for retrieval.
+The generator reads `All_train.txt` for training and `All_val.txt` for validation.
+The audit found that the previous public entry used `All_eval.txt` as validation;
+that list contains all 861 canonical evaluation clips. The corrected entry
+checks train/validation/test disjointness and uses the existing, separate
+`All_val.txt`. No split files or existing checkpoint metrics were rewritten;
+the historical checkpoint's exact training-list provenance has not been
+established by this code audit. Per-clip style JSONs are read from
+`styles/Alldata/`; the consolidated style map is used for retrieval.
 Missing required inputs now raise an error instead of silently dropping clips
 or replacing retrieval conditions with zero arrays.
 

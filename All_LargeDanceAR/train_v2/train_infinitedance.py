@@ -33,6 +33,7 @@ os.chdir(ROOT_DIR)
 
 from models.dancellama import Music2DanceLlamaModel, MusicDanceDataset, variable_length_collate_fn, GenreBalancedDistributedSampler
 from models.motion import load_vqvae_model
+from models.release_splits import check_release_splits
 from models.train_utils import _topk_correct
 
 
@@ -190,6 +191,10 @@ def train_worker(rank, world_size, args, codebooks_arg):
             json.dump(vars(args), f, indent=2)
         print(f"[rank0] precision={args.precision} ws={world_size} bs/gpu={args.batch_size} grad_accum={args.gradient_accumulation_steps} effective_batch={args.batch_size * world_size * args.gradient_accumulation_steps}")
 
+    # Keep validation separate from the canonical 861-clip evaluation set.
+    if args.dancedata == "All":
+        check_release_splits(args.data_split_dir)
+
     # 数据
     if is_main:
         print("Loading datasets...")
@@ -206,7 +211,7 @@ def train_worker(rank, world_size, args, codebooks_arg):
     val_dataset = MusicDanceDataset(
         music_dir=args.music_dir, dance_dir=args.dance_dir,
         data_split_dir=args.data_split_dir, style_dir=args.style_dir,
-        split="eval", music_length=args.music_length, dance_length=args.dance_length,
+        split="val", music_length=args.music_length, dance_length=args.dance_length,
         max_samples=args.max_val_samples, verbose=is_main,
         window_stride=args.window_stride,
         dance_token_start=args.dance_token_start,
