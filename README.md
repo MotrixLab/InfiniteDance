@@ -136,7 +136,7 @@ InfiniteDance/
 | Beat-Align (BA) metric | ✅ | needs `musicfeature_55_allmusic_pure` |
 | Retrieval ablations | ✅ | uses `retrieval_s192_l384_style` |
 | **FID-k / FID-m / Div-k / Div-m** | ✅ | precomputed GT kinetic/manual features and canonical split are released; test GT vectors are also included |
-| **Training from scratch** | Partial data coverage | available training MuQ and styles are supplied, but the historical lists still contain unavailable paired inputs; run the completeness check below. Official Llama-3.2-1B access is also required |
+| **Training from scratch** | Cleaned active lists | 10,154 TRAIN / 415 VAL clips have complete source file sets; download all supplementary MuQ shards and styles, then run the check below. Official Llama-3.2-1B access is required |
 | **Per-dance SMPL-X parameters (InfiniteDance clips)** | ✅ | 9,748 project-owned fits in `infinitedance_smplx_smooth/` |
 
 Inference on the released test music uses the faster precomputed
@@ -224,14 +224,18 @@ The two-stage generator freezes the Llama backbone in stage 1 and fine-tunes it
 in stage 2. Fresh training requires the official Meta Llama-3.2-1B weights;
 the released generation checkpoint remains usable for inference.
 
-**The historical training lists are preserved unchanged.** The November 2026
-release audit found entries without matching motion tokens, music, or styles
-in the available source tree. The supplementary MuQ shards contain only
-existing source features; they do not synthesize missing inputs or silently
-redefine a split. `release_training_manifest.json` records each music file's
-shape and SHA-256. `release_source_audit.json` lists the remaining modality gaps.
-A complete original-data training rerun therefore remains pending recovery of
-those source files. The check reports every missing entry and returns nonzero:
+The active generator lists contain **10,154 TRAIN and 415 VAL clips** after
+removing 669 TRAIN and 21 VAL entries with missing required files. This is a
+cleaned subset of the historical release, not a claim of original full-corpus
+coverage. Original lists are archived under
+`InfiniteDanceData/legacy/20261106_original_splits/`; every removed entry is
+recorded in `partition/removed_incomplete_samples_20261106.json`.
+The canonical evaluation list and GT feature selection remain unchanged.
+
+The supplementary MuQ shards retain existing source features, including
+available evaluation music. `release_training_manifest.json` records each
+file's shape and SHA-256. `release_source_audit.json` records the original
+source gaps. After the complete download, check the active lists:
 
 ```bash
 python check_release_data.py --report training_data_check.json
