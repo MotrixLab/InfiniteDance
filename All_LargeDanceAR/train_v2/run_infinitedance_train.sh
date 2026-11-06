@@ -63,8 +63,8 @@ CMD=("${PY}" train_v2/train_infinitedance.py
   --style_embedding_dim 64
   --pretrained_model_name "${LLAMA_DIR}"
   --vqvae_checkpoint_path ./models/checkpoints/dance_vqvae.pth
-  --mean_path "${DATA_ROOT}/dance/alldata_new_joint_vecs264/meta/Mean.npy"
-  --std_path  ${DATA_ROOT}/dance/alldata_new_joint_vecs264/meta/Std.npy
+  --mean_path "${DATA_ROOT}/dance/vqvae_train_20260522/meta/Mean.npy"
+  --std_path "${DATA_ROOT}/dance/vqvae_train_20260522/meta/Std.npy"
   --batch_size ${BATCH}
   --gradient_accumulation_steps ${ACCUM}
   --stage1_epoch ${STAGE1_EP}

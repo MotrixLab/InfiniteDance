@@ -205,20 +205,38 @@ python ./visualization/render_plot_npy.py --joints_dir ./infer_results/dance/npy
 
 ### 1.1 Metrics
 
-`metrics.sh` runs FID-k / FID-m / Div-k / Div-m and the official Beat-Align score.
-
-Predictions are selected with `partition/test_eval861.txt` (861 clips), the
-intersection with generation outputs, GT motion, and beat features. Following
-the reported protocol, FID/Div compare those predictions with the clean training
-distribution selected by `partition/All_cleandata_train.txt`; `metrics.sh` uses
-the released kinetic/manual GT features directly. The corresponding 861 raw
-264-d GT vectors are released for inspection and independent evaluation.
+`metrics.sh` evaluates one selected sample for every identity in
+`partition/test_eval861.txt` (861 clips), using the released kinetic/manual GT
+features selected by `partition/All_cleandata_train.txt` (8,235 available GT
+feature rows). Missing predictions and duplicate identities are errors. Extra
+predictions and unselected sample indices are listed in the JSON report.
 
 ```bash
 cd All_LargeDanceAR
-bash metrics.sh <pred_root> [device_id]
-# pred_root e.g. ./infer/dance_<TS>/dance/npy/joints
+bash metrics.sh /absolute/path/to/dance/npy/joints
+# CPU parallelism and an explicit report destination:
+WORKERS=4 METRICS_REPORT=/path/to/run/metrics.json bash metrics.sh /path/to/joints
+# An explicitly partial diagnostic, never a complete 861-clip result:
+bash metrics.sh /path/to/joints --allow-partial
 ```
+
+The scorer recomputes features from decoded world-space `(T,22,3)` joints and
+does not reuse feature directories left by earlier evaluations. FID/Div and
+Beat-Align use the same first 1,024 frames by default (`MAX_FRAMES=0` uses the
+full sequence). Generated names such as `dance_sample_0_15_Ballet119.npy` map to
+the original music identity; `--sample-index` selects a single replicate.
+Missing beat features fail the run. Undefined beat scores are reported per
+sample and produce a nonzero exit, rather than a silently reduced average.
+
+The kinetic/manual extractors, GT normalization, pairwise diversity and
+Gaussian beat-matching formulas retain the released definitions. The feature
+extractor's historical 60-Hz convention is recorded explicitly; this repair
+does not silently reinterpret it as 30 Hz. JSON output includes sample IDs,
+frame limits, input hashes and scorer hashes. The previous standalone
+`metrics_largedata_v2.py` and `beat_align_score_joints.py` remain historical
+utilities; the supported entry is `metrics.sh` / `evaluate_release.py`.
+Full-paper numerical reproduction is not established by the CPU regression
+tests; changing decoding statistics or sample coverage requires a fresh result.
 
 ### 2. Training
 

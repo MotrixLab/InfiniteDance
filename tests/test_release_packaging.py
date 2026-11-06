@@ -51,6 +51,8 @@ class ReleasePackagingTest(unittest.TestCase):
                            env=env, check=True, stdout=subprocess.PIPE)
             argv = json.loads(capture.read_text())
             self.assertEqual(argv[argv.index('--music_dir') + 1], str(root / 'data with spaces/music/muq_features'))
+            self.assertEqual(argv[argv.index('--mean_path') + 1], str(root / 'data with spaces/dance/vqvae_train_20260522/meta/Mean.npy'))
+            self.assertEqual(argv[argv.index('--std_path') + 1], str(root / 'data with spaces/dance/vqvae_train_20260522/meta/Std.npy'))
             self.assertEqual(argv[-2:], ['--batch_size', '7'])
 
     def test_extract_and_reject_path_escape(self):
@@ -69,6 +71,25 @@ class ReleasePackagingTest(unittest.TestCase):
                 handle.addfile(member, io.BytesIO(b'x'))
             with self.assertRaises(ValueError):
                 module('prepare_release_data').extract(archive, root / 'music')
+
+    def test_metrics_navigation_link_resolves_code_and_preserves_caller_paths(self):
+        with tempfile.TemporaryDirectory(prefix='metrics entry ') as tmp:
+            root = Path(tmp)
+            link = root / 'metrics.sh'
+            link.symlink_to(ROOT / 'All_LargeDanceAR/metrics.sh')
+            capture = root / 'arguments.json'
+            fake = root / 'fake python'
+            fake.write_text('#!/usr/bin/env python3\nimport os,sys,json\n'
+                            'open(os.environ["CAPTURE"],"w").write(json.dumps(sys.argv[1:]))\n')
+            fake.chmod(0o755)
+            env = dict(os.environ, PY=str(fake), CAPTURE=str(capture), DATA_ROOT=str(root / 'data'))
+            subprocess.run(['bash', str(link), 'relative predictions', '7', '--allow-partial'],
+                           cwd=tmp, env=env, check=True)
+            argv = json.loads(capture.read_text())
+            self.assertEqual(Path(argv[0]), ROOT / 'All_LargeDanceAR/metrics/evaluate_release.py')
+            self.assertEqual(argv[argv.index('--pred-root') + 1], 'relative predictions')
+            self.assertEqual(argv[argv.index('--eval-list') + 1], str(root / 'data/partition/test_eval861.txt'))
+            self.assertEqual(argv[-1], '--allow-partial')
 
 
 if __name__ == '__main__':
