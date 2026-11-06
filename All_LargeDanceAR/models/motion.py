@@ -8,14 +8,12 @@ import models.vqvae as vqvae
 import numpy as np
 import torch
 
-def load_vqvae_model(checkpoint_path="./models/checkpoints/dance_vqvae.pth",mean_path="../InfiniteDanceData/dance/alldata_new_joint_vecs264/meta/Mean.npy",std_path="../InfiniteDanceData/dance/alldata_new_joint_vecs264/meta/Std.npy",device=None):
+def load_vqvae_model(checkpoint_path="./models/checkpoints/dance_vqvae.pth",mean_path=None,std_path=None,device=None):
     # checkpoint_path = '/data1/hzy/HumanMotion/T2M-GPT_mofea264/output/exp_momask_aistpp_mofea264_250619_0859/net_best_loss_train.pth'
     # print(f"Loading VQVAE model from {checkpoint_path}")
     opt_path = os.path.join(os.path.dirname(checkpoint_path), "args.json")
     with open(opt_path, 'r') as f:
         opt_dict = json.load(f)
-    mean= np.load(mean_path)
-    std= np.load(std_path)
     opt = Namespace(**opt_dict)
     dim_pose = 264
     net = vqvae.RVQVAE(
@@ -33,17 +31,8 @@ def load_vqvae_model(checkpoint_path="./models/checkpoints/dance_vqvae.pth",mean
         opt.vq_norm
     )
     
-    def forward(self, x):
-        # x= (x-mean)/std #normalize
-        x_in = self.preprocess(x)
-        x_encoder = self.encoder(x_in)
-        x_quantized, code_idx, commit_loss, perplexity = self.quantizer(x_encoder, sample_codebook_temp=0.5)
-        x_out = self.decoder(x_quantized)
-        return x_out, commit_loss, perplexity, x_quantized, code_idx
-    
-    vqvae.RVQVAE.forward = forward
     checkpoint = torch.load(checkpoint_path, map_location='cpu')
-    net.load_state_dict(checkpoint['net'], strict=False)
+    net.load_state_dict(checkpoint['net'], strict=True)
     
     # device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     net.to(device)

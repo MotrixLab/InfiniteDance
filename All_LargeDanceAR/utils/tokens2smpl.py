@@ -89,7 +89,9 @@ def load_vqvae_model(checkpoint_path=None):
                        args.width, args.depth, args.dilation_growth_rate, args.vq_act, args.vq_norm)
     
     checkpoint = torch.load(checkpoint_path, map_location='cpu')
-    net.load_state_dict(checkpoint['net'], strict=False)  # Use strict=False for compatibility with parameters like vel_decoder
+    net.load_state_dict(checkpoint['net'], strict=True)
+    net.use_velocity_decoder = bool(args.vel_decoder)
+    net.use_rotation_decoder = bool(args.rot_decoder)
     
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     net.to(device)
@@ -134,13 +136,13 @@ def motion_detokenizer(quantized_vectors, net, mean, std):
     # Debug: Print input shape
     # print(f"Input to net shape: {quantized_vectors.shape}")
     
-    # Call net's decoder and vel_decoder
+    # Auxiliary heads only replace the base output when their training is recorded.
     pred_motion = net.decoder(quantized_vectors.permute(0, 2, 1))
-    pred_motion_xz = net.vel_decoder(quantized_vectors.permute(0, 2, 1))
-    
+    if net.use_velocity_decoder:
+        pred_motion[..., 3:5] = net.vel_decoder(quantized_vectors.permute(0, 2, 1))
+    if net.use_rotation_decoder:
+        pred_motion[..., [1, 2, *range(68, 194)]] = net.rot_decoder(quantized_vectors.permute(0, 2, 1))
     pred_motion = pred_motion.squeeze(0).cpu().detach().numpy()
-    pred_motion_xz = pred_motion_xz.squeeze(0).cpu().detach().numpy()
-    pred_motion[..., 3:5] = pred_motion_xz  # Update XZ velocity
     dance_output = pred_motion * std + mean
     
     return dance_output
@@ -396,10 +398,10 @@ if __name__ == "__main__":
     parser.add_argument('--checkpoint_path', type=str, 
                         default=os.path.join(ROOT_DIR, "models/checkpoints/dance_vqvae.pth"))
     parser.add_argument('--mean_path', type=str, 
-                        default=os.path.join(DATA_DIR, "dance/alldata_new_joint_vecs264/meta/Mean.npy"),
+                        default=os.path.join(DATA_DIR, "dance/vqvae_train_20260522/meta/Mean.npy"),
                         help="Path to mean vector file")
     parser.add_argument('--std_path', type=str, 
-                        default=os.path.join(DATA_DIR, "dance/alldata_new_joint_vecs264/meta/Std.npy"),
+                        default=os.path.join(DATA_DIR, "dance/vqvae_train_20260522/meta/Std.npy"),
                         help="Path to std vector file")
     parser.add_argument('--num_processes', type=int, default=16,
                         help="Number of processes to use for parallel processing (default: 16)")

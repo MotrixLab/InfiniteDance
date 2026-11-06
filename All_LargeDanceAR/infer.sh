@@ -33,8 +33,8 @@ TIMESTAMP=$(date +"%y%m%d_%H%M")
 MUSIC_PATH=${MUSIC_PATH:-${DATA_ROOT}/music/muq_features/test_infinitedance}
 CHECKPOINT_PATH=${CHECKPOINT_PATH:-./output/exp_m2d_infinitedance/best_model_stage2.pt}
 VQVAE_CHECKPOINT_PATH=${VQVAE_CHECKPOINT_PATH:-./models/checkpoints/dance_vqvae.pth}
-MEAN_PATH=${MEAN_PATH:-${DATA_ROOT}/dance/alldata_new_joint_vecs264/meta/Mean.npy}
-STD_PATH=${STD_PATH:-${DATA_ROOT}/dance/alldata_new_joint_vecs264/meta/Std.npy}
+MEAN_PATH=${MEAN_PATH:-${DATA_ROOT}/dance/vqvae_train_20260522/meta/Mean.npy}
+STD_PATH=${STD_PATH:-${DATA_ROOT}/dance/vqvae_train_20260522/meta/Std.npy}
 
 OUTPUT_ROOT=${OUTPUT_ROOT:-./infer/dance_${TIMESTAMP}}
 DANCE_OUTPUT_DIR="${OUTPUT_ROOT}/dance"

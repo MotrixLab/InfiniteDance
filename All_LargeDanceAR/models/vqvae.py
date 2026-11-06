@@ -12,7 +12,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 # from vector_quantize_pytorch.vector_quantize_pytorch import VectorQuantize
 from einops import pack, rearrange, repeat, unpack
-from models.encdec import Decoder, Encoder
+from .encdec import Decoder, Encoder
 from torch import nn
 
 

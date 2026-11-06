@@ -40,7 +40,9 @@ class ReleasePairedDataTest(unittest.TestCase):
             with patch.dict(os.environ, {'INFINITEDANCE_DATA_ROOT': tmp}):
                 cfg = get_config('RetrievalNet/configs/largedance/musicbody/datasets45.yaml')
             self.assertEqual(cfg.largedance.audio_dir, str(Path(tmp).resolve() / 'music/musicfeature_55_allmusic_pure'))
-            self.assertTrue(cfg.largedance.meta_paths.endswith('alldata_mbr_s100_l384.json'))
+            self.assertTrue(cfg.largedance.meta_paths.endswith('alldata_mbr_s100_l384_release.json'))
+            self.assertTrue(cfg.largedance_test.mofea264_dir.endswith('dance/test_eval861_joint_vecs264'))
+            self.assertEqual(cfg.largedance_all.split, 'train')
 
 
 if __name__ == '__main__':

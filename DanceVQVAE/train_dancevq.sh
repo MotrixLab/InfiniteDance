@@ -1,3 +1,5 @@
-export PYTHONPATH=$PYTHONPATH:$(pwd)
-# echo $PYTHONPATH
-python DanceVQVAE/scripts/train_dancevq.py
+#!/usr/bin/env bash
+set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR/.."
+exec "${PY:-python}" -m DanceVQVAE.train_release "$@"

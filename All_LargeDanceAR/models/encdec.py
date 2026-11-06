@@ -1,7 +1,7 @@
 
     
 import torch.nn as nn
-from models.resnet import Resnet1D
+from .resnet import Resnet1D
 
 
 class Encoder(nn.Module):

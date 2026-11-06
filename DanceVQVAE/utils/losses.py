@@ -292,7 +292,6 @@ def get_joints(data):
     return data[..., 5 : (22 - 1) * 3 + 5]
 
 
-from pytorch3d.transforms import matrix_to_axis_angle, rotation_6d_to_matrix
 
 
 def compute_rotation_loss(motion_pred, motion_gt, rot_indices=[1, 2, *range(68, 194)]):
@@ -472,7 +471,7 @@ class ReConsLoss(nn.Module):
         foot_mask = torch.zeros(self.nb_joints-1, dtype=torch.bool, device=motion_pred.device)
         foot_idx = [7, 8, 10, 11]
         foot_mask[[idx - 1 for idx in foot_idx]] = True
-        foot_mask = foot_mask.repeat(3)
+        foot_mask = foot_mask.repeat_interleave(3)
         pred_foot_joints = pred_joints[..., foot_mask]  # [batch_size, seq_len, 12]
         gt_foot_joints = gt_joints[..., foot_mask]
         pred_foot_vel = pred_foot_joints[:, 1:] - pred_foot_joints[:, :-1]  # [batch_size, seq_len-1, 12]
@@ -521,5 +520,3 @@ class ReConsLoss(nn.Module):
         }
         
         return total_loss,motion_loss,xz_vel_loss,xz_acc_loss,rot_loss,rot_acc_loss,foot_loss
-    
-    

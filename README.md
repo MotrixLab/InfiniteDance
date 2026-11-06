@@ -58,7 +58,7 @@ The HF layout mirrors this repo — download into the repo root and extract the 
 | `All_LargeDanceAR/models/checkpoints/args.json` | 2 KB | same path under repo root |
 | `All_LargeDanceAR/output/exp_m2d_infinitedance/best_model_stage2.pt` | 2.15 GB | same path under repo root |
 | `All_LargeDanceAR/models/retrievalnet/retrievalnet_audio55_motion264.ckpt` | 71 MB | same path under repo root |
-| `InfiniteDanceData/dance/alldata_new_joint_vecs264/meta/{Mean,Std}.npy` | 2 KB ea | same path under repo root |
+| `InfiniteDanceData/dance/vqvae_train_20260522/meta/{Mean,Std}.npy` | 1.2 KB ea | same path under repo root |
 | `InfiniteDanceData/DanceVQVAE/body_models/smpl/*` | 40 MB | same path under repo root |
 | `InfiniteDanceData/partition/*.txt` | <1 MB | same path under repo root |
 | `InfiniteDanceData/styles/all_style_map.json` | 0.5 MB | same path under repo root |
@@ -66,6 +66,8 @@ The HF layout mirrors this repo — download into the repo root and extract the 
 | `InfiniteDanceData/muq_features_trainval_*.tar.gz` | see training manifest | extract each shard → `InfiniteDanceData/music/muq_features/` |
 | `InfiniteDanceData/release_training_manifest.json` | file hashes and availability | same path under repo root |
 | `InfiniteDanceData/partition/alldata_mbr_s100_l384.json` | 8.9 MB | original 384-frame RetrievalNet windows |
+| `InfiniteDanceData/partition/alldata_mbr_s100_l384_release.json` | see repository | usable paired windows in the public archives |
+| `InfiniteDanceData/partition/retrieval_windows_release_audit.json` | see repository | excluded windows and their reasons |
 | `InfiniteDanceData/Infinite_MotionTokens_512x1024_3layer_cleandata.tar.gz` | 15 MB | extract → `InfiniteDanceData/dance/Infinite_MotionTokens_512x1024_3layer_cleandata/` |
 | `InfiniteDanceData/muq_features_test_infinitedance.tar.gz` | 2.6 GB | extract → `InfiniteDanceData/music/muq_features/test_infinitedance/` |
 | `InfiniteDanceData/musicfeature_55_allmusic_pure.tar.gz` | 3.0 GB | extract → `InfiniteDanceData/music/musicfeature_55_allmusic_pure/` |
@@ -111,7 +113,7 @@ InfiniteDance/
 │           └── best_model_stage2.pt                   # ← main ckpt (incl. LLaMA)
 └── InfiniteDanceData/
     ├── dance/
-    │   ├── alldata_new_joint_vecs264/meta/{Mean,Std}.npy
+    │   ├── vqvae_train_20260522/meta/{Mean,Std}.npy
     │   ├── alldata_new_joint_vecs264_ft_balanced/     # ← released training motion features
     │   ├── Infinite_MotionTokens_512x1024_3layer_cleandata/  # ← extracted (matches released 3-layer RVQVAE)
     │   ├── retrieval_s192_l384_style/                 # ← released test cache
@@ -255,19 +257,67 @@ The generator reads `All_train.txt` for training and `All_val.txt` for validatio
 The audit found that the previous public entry used `All_eval.txt` as validation;
 that list contains all 861 canonical evaluation clips. The corrected entry
 checks train/validation/test disjointness and uses the existing, separate
-`All_val.txt`. No split files or existing checkpoint metrics were rewritten;
+`All_val.txt`. The canonical evaluation lists and existing checkpoint metrics were preserved;
 the historical checkpoint's exact training-list provenance has not been
 established by this code audit. Per-clip style JSONs are read from
 `styles/Alldata/`; the consolidated style map is used for retrieval.
-Missing required inputs now raise an error instead of silently dropping clips
-or replacing retrieval conditions with zero arrays.
+Missing required inputs raise an error. Retrieval neighbors are selected from
+available motion spans in the stored ranking before applying top-k; exclusions
+are reported. This fixes queries whose highest-ranked neighbors are missing,
+while retaining later valid candidates. The original cache is preserved. These
+repairs are not a claim of bitwise replay of historical generated outputs.
+
+File availability and usable default training windows are different counts:
+with the released 320-music-frame / 288-token window, 1,465 TRAIN and 34 VAL
+clips are too short. Their files and identities remain available. The default
+window set therefore uses 8,689 TRAIN / 381 VAL clips (46,107 / 1,576 windows).
+
+### Codec decoding and retraining
+
+The released 512-code, 1024-d, three-layer RVQ checkpoint uses statistics in
+`dance/vqvae_train_20260522/meta/`. The earlier public CLI pointed to different
+`alldata_new_joint_vecs264/meta/` statistics; those historical files remain
+available, but are no longer the default. Both inference entries and token
+conversion now use the checkpoint-matched files. The checkpoint configuration
+has `vel_decoder=false` and `rot_decoder=false`; their weights equal seeded
+initialization, so decoding uses the trained base decoder. Previously the token
+converter unconditionally replaced root velocity with the untrained auxiliary
+head. Outputs from that old path are not interchangeable with corrected output.
+
+`DanceVQVAE.models.vqvae` now imports the same implementation used by the
+generator. The portable training entry replaces the author-machine launcher,
+uses disjoint release train/validation lists and saves checkpoints with the
+same parameter names. It also corrects the XYZ indexing of foot-joint loss.
+Its lists contain 8,869 TRAIN / 415 VAL clips from the public balanced-motion
+archive, with missing motion files recorded in `vq_release_split_audit.json`. It is a retraining
+recipe, not a reconstruction of the historical private training pool.
+
+```bash
+# From the repository root, after downloading/extracting the motion archive:
+bash DanceVQVAE/train_dancevq.sh --data-root ./InfiniteDanceData \
+  --output ./DanceVQVAE/output/release_rvq --device cuda:0 --batch-size 256
+```
+
+A CPU optimization step on two real training clips, validation on two held-out
+clips, and checkpoint saving passed. A checkpoint-compatibility check strictly
+loaded every released tensor. Two
+real motion/token pairs were used to check normalization and decoder behavior;
+these checks do not reproduce the paper's motion-generation metrics. Historical
+standalone scripts under `DanceVQVAE/scripts/` remain archival experiment code;
+use the documented launcher for the released-data retraining path.
 
 ### 2.1 RetrievalNet retraining
 
 The released encoder uses **384 frames**, matching the original
-`alldata_mbr_s100_l384.json`. The old 600-frame configuration did not match the
+`alldata_mbr_s100_l384.json`. The active retraining metadata is
+`alldata_mbr_s100_l384_release.json`: unavailable or truncated windows are
+excluded, and `retrieval_windows_release_audit.json` records the exclusions.
+The original metadata remains published for provenance. The old 600-frame configuration did not match the
 released encoder. Both portable dataset configurations now refer to the
-published 384-frame metadata and resolve paths through `INFINITEDANCE_DATA_ROOT`.
+available 384-frame windows and resolve paths through `INFINITEDANCE_DATA_ROOT`.
+There are 47,090 usable training windows and 4,557 canonical test windows.
+Training and retrieval-corpus construction use only `train` windows; test
+windows read the separately released canonical test GT directory.
 
 ```bash
 cd All_LargeDanceAR
