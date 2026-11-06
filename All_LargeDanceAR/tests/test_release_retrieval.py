@@ -5,10 +5,27 @@ from pathlib import Path
 
 import numpy as np
 
-from utils.get_top10_mofea264 import get_top_mofea_specific_style
+from utils.get_top10_mofea264 import get_top_mofea_specific_style, get_items_by_style_and_idx
 
 
 class ReleaseRetrievalTest(unittest.TestCase):
+    def test_missing_and_short_candidates_do_not_hide_later_valid_neighbors(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            np.save(root / 'short.npy', np.zeros((100, 264), dtype=np.float32))
+            np.save(root / 'valid.npy', np.ones((384, 264), dtype=np.float32))
+            path = root / 'cache.json'
+            path.write_text(json.dumps({'idx_0': {'Popular': [
+                {'name': 'missing@0_384'}, {'name': 'short@0_384'},
+                {'name': 'valid@0_384'}]}}))
+            with self.assertWarns(RuntimeWarning):
+                names, _ = get_items_by_style_and_idx(str(path), 'Popular', 0,
+                                                      top_k=1, motion_base=str(root))
+            self.assertEqual(names, ['valid@0_384'])
+            path.write_text('{broken json')
+            with self.assertRaises(json.JSONDecodeError):
+                get_items_by_style_and_idx(str(path), 'Popular', 0)
+
     def test_cache_path_and_missing_cache_error(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

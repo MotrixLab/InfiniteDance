@@ -1137,53 +1137,53 @@ def _match_style_from_name(name: str, target_style: str) -> bool:
     return False
 
 def get_items_by_style_and_idx(retrieval_filepath: str,
-                                    target_style: str,
-                                    target_idx: int,
-                                    top_k: int = 10,
-                                    exclude_names=None) -> list:
-    """
-    Unified version: Returns both the list of names and the list of dicts.
-    Snippet A used this signature. Snippet B callers will need to unpack just the first return value.
-    """
-    try:
-        with open(retrieval_filepath, 'r') as f:
-            # data is { "idx_0": { "Style": [...] }, ... }
-            data = json.load(f)
-                    
-        # Dict format: { "idx_0": { "Style": [...] }, ... }
-        if isinstance(data, dict):
-            style_dict = data.get(f"idx_{target_idx}", {})
-            items_list = style_dict.get(target_style, [])
-        # List format: [ [ {"name": ...}, ... ], ... ]
-        elif isinstance(data, list):
-            if 0 <= target_idx < len(data):
-                items_list = data[target_idx]
-            else:
-                items_list = []
-            if target_style:
-                filtered = [item for item in items_list if _match_style_from_name(item.get("name", ""), target_style)]
-                if filtered:
-                    items_list = filtered
-        else:
-            items_list = []
+                               target_style: str,
+                               target_idx: int,
+                               top_k: int = 10,
+                               exclude_names=None,
+                               motion_base=None):
+    """Select ranked candidates whose referenced motion spans are available."""
+    with open(retrieval_filepath, 'r') as handle:
+        data = json.load(handle)
+    if isinstance(data, dict):
+        items = data.get(f"idx_{target_idx}", {}).get(target_style, [])
+    elif isinstance(data, list):
+        items = data[target_idx] if 0 <= target_idx < len(data) else []
+        if target_style:
+            filtered = [item for item in items
+                        if _match_style_from_name(item["name"], target_style)]
+            if filtered:
+                items = filtered
+    else:
+        raise ValueError(f"Unsupported retrieval cache: {retrieval_filepath}")
 
-        if exclude_names:
-            items_list = [item for item in items_list if _video_part(item.get("name", "")) not in exclude_names]
-
-        items_list_top10 = [item["name"] for item in items_list][:top_k]
-        items_list_top10_2 = [{'name': item['name']} for item in items_list][:top_k]
-
-        return items_list_top10, items_list_top10_2
-        
-    except FileNotFoundError:
-        print(f"Error: Retrieval file not found: {retrieval_filepath}")
-        return [], []
-    except json.JSONDecodeError:
-        print(f"Error: Cannot parse retrieval file: {retrieval_filepath}")
-        return [], []
-    except Exception as e:
-        print(f"Unexpected error: {e}")
-        return [], []
+    selected = []
+    rejected = []
+    lengths = {}
+    for item in items:
+        name = item["name"]
+        video, span = name.rsplit('@', 1)
+        if exclude_names and video in exclude_names:
+            continue
+        if motion_base is not None:
+            if video not in lengths:
+                path = os.path.join(motion_base, video + '.npy')
+                lengths[video] = (len(np.load(path, mmap_mode='r', allow_pickle=False))
+                                  if os.path.isfile(path) else None)
+            start, end = map(int, span.split('_'))
+            length = lengths[video]
+            if length is None or not 0 <= start < end <= length:
+                rejected.append(name)
+                continue
+        selected.append({'name': name})
+        if len(selected) >= top_k:
+            break
+    if rejected:
+        import warnings
+        warnings.warn(f"Excluded {len(rejected)} unavailable motion spans from "
+                      f"{retrieval_filepath}, idx={target_idx}, style={target_style}; "
+                      f"retained {len(selected)} ranked candidates.", RuntimeWarning)
+    return [item['name'] for item in selected], selected
 
 # ==========================================
 # Main Functions from Snippet A (Absolute Paths & New Features)
@@ -1382,7 +1382,8 @@ def get_top_mofea_specific_style(name: str = None,
                     target_style=style,
                     target_idx=idx,
                     top_k=top_k,
-                    exclude_names=exclude_names
+                    exclude_names=exclude_names,
+                    motion_base=motion_base
                 )
         else:
             raise FileNotFoundError(
@@ -1403,6 +1404,9 @@ def get_top_mofea_specific_style(name: str = None,
                 motion = np.pad(motion, ((0, pad_length), (0, 0)), mode='wrap')
 
         top10_results = get_top10_similar_mofea_features(motion, eval_wrapper, motionembedding_dir, device=device, top_k=top_k, exclude_names=exclude_names)
+
+    if not top10_results:
+        raise ValueError(f"No available retrieval motion for {name}, window {idx}, style {style}")
 
     # Extract motion segments
     results = []
