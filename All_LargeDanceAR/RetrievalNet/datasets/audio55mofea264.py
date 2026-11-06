@@ -3,9 +3,7 @@ import json
 import os
 import pickle as pkl
 import sys
-import test
 
-import ipdb
 import numpy as np
 import torch
 from torch.utils import data
@@ -51,79 +49,7 @@ def recover_from_ric264(data,joints_num=22):
 
     return positions
 
-class AudioMotion_mb(data.Dataset):
-    def __init__(self, 
-                 mofea264_dir,
-                 audio_dir,
-                 meta_paths, 
-                 split,
-                 pose_fps=30,
-                #  audio_sr=16000,
-                 pipeline=None,
-                 **kwargs
-                 ):
-        self.mofea264_dir = mofea264_dir
-        self.audio_dir = audio_dir
-        # self.pipeline = Compose(pipeline)
-        
-        vid_meta = json.load(open(meta_paths, "r"))
-        if split != 'all':
-            self.vid_meta = [item for item in tqdm(vid_meta) if item.get("mode") == split]
-        else:
-            print('load all data')
-            self.vid_meta = [item for item in tqdm(vid_meta)]
-        
-        
-        
-        # debug!!!
-        # self.vid_meta = self.vid_meta[:900]
-        self.data_list = self.vid_meta
-        self.mo_fps = pose_fps
-        # self.audio_sr = audio_sr
-        print(f'AudioMotion has {len(self.vid_meta)} samples')
-
-    def __len__(self):
-        return len(self.data_list)
-    
-    @staticmethod
-    def normalize(motion, mean, std):
-        return (motion - mean) / (std + 1e-7)
-    
-    @staticmethod
-    def inverse_normalize(motion, mean, std):
-        return motion * std + mean
-
-    def __getitem__(self, item):
-        # ipdb.set_trace()
-        data_item = self.data_list[item]
-        sdx, edx = data_item["start_idx"], data_item["end_idx"]
-        
-        seqname = data_item["seqname"]
-        # mofea264 = np.load(os.path.join(self.mofea264_dir, seqname+ '.npy'))[sdx:edx].astype(np.float32)
-        # audio = np.load(os.path.join(self.audio_dir, seqname+'.npy')).astype(np.float32)
-        # audio = audio[sdx:edx,:55]      # audio帧率和motion一致
-        seqname = seqname + '@' + str(sdx) + '_' + str(edx)
-        
-        return seqname
-        # mofea264 = np.zeros([2,264], dtype=np.float32)
-        # audio = np.zeros([2,55], dtype=np.float32)
-        
-        return seqname, audio, mofea264   
-    
-    def get_train_test_list(self):
-        train = []
-        test = []
-        train_file = open(os.path.join(self.split_dir, 'All_train.txt') , 'r')
-        for fname in train_file.readlines():
-            train.append(fname.strip())
-        train_file.close()
-
-        test_file = open(os.path.join(self.split_dir, 'All_eval.txt'), 'r')
-        for fname in test_file.readlines():
-            test.append(fname.strip())
-        test_file.close()
-      
-        return train, test
+from RetrievalNet.paired_data import AudioMotion_mb
 
 if __name__ == '__main__':
     audio_dir = '/data2/hzy/InfiniteDance/InfiniteDanceData/music/musicfeature_55_allmusic_pure'

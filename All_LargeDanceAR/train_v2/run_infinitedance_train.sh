@@ -52,18 +52,18 @@ echo "  RESUME:      ${PREV_CKPT:-<from scratch>}"
 echo "  out:         ${OUT}"
 echo "=========================================="
 
-CMD=(${PY} train_v2/train_infinitedance.py
+CMD=("${PY}" train_v2/train_infinitedance.py
   --out_dir "${OUT}"
   --world_size ${WS} --MASTER_PORT ${MASTER_PORT}
-  --music_dir ${DATA_ROOT}/music/muq_features
-  --dance_dir ${DATA_ROOT}/dance/Infinite_MotionTokens_512x1024_3layer_cleandata
-  --data_split_dir ${DATA_ROOT}/partition
-  --style_dir ${DATA_ROOT}/styles/Alldata
+  --music_dir "${DATA_ROOT}/music/muq_features"
+  --dance_dir "${DATA_ROOT}/dance/Infinite_MotionTokens_512x1024_3layer_cleandata"
+  --data_split_dir "${DATA_ROOT}/partition"
+  --style_dir "${DATA_ROOT}/styles/Alldata"
   --dancedata All --n_bins 2
   --style_embedding_dim 64
   --pretrained_model_name "${LLAMA_DIR}"
   --vqvae_checkpoint_path ./models/checkpoints/dance_vqvae.pth
-  --mean_path ${DATA_ROOT}/dance/alldata_new_joint_vecs264/meta/Mean.npy
+  --mean_path "${DATA_ROOT}/dance/alldata_new_joint_vecs264/meta/Mean.npy"
   --std_path  ${DATA_ROOT}/dance/alldata_new_joint_vecs264/meta/Std.npy
   --batch_size ${BATCH}
   --gradient_accumulation_steps ${ACCUM}
@@ -90,4 +90,4 @@ if [ -n "${PREV_CKPT}" ]; then
   CMD+=(--resume_from_checkpoint "${PREV_CKPT}")
 fi
 
-"${CMD[@]}"
+"${CMD[@]}" "$@"

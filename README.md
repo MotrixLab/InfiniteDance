@@ -32,7 +32,7 @@ InfiniteDance
 
 ```bash
 # Clone the repository
-git clone git@github.com:MotrixLab/InfiniteDance.git
+git clone https://github.com/MotrixLab/InfiniteDance.git
 
 cd InfiniteDance
 
@@ -62,6 +62,10 @@ The HF layout mirrors this repo — download into the repo root and extract the 
 | `InfiniteDanceData/DanceVQVAE/body_models/smpl/*` | 40 MB | same path under repo root |
 | `InfiniteDanceData/partition/*.txt` | <1 MB | same path under repo root |
 | `InfiniteDanceData/styles/all_style_map.json` | 0.5 MB | same path under repo root |
+| `InfiniteDanceData/styles_Alldata_eccv.tar.gz` | <1 MB | extract → `InfiniteDanceData/styles/Alldata/` |
+| `InfiniteDanceData/muq_features_trainval_*.tar.gz` | see training manifest | extract each shard → `InfiniteDanceData/music/muq_features/` |
+| `InfiniteDanceData/release_training_manifest.json` | file hashes and availability | same path under repo root |
+| `InfiniteDanceData/partition/alldata_mbr_s100_l384.json` | 8.9 MB | original 384-frame RetrievalNet windows |
 | `InfiniteDanceData/Infinite_MotionTokens_512x1024_3layer_cleandata.tar.gz` | 15 MB | extract → `InfiniteDanceData/dance/Infinite_MotionTokens_512x1024_3layer_cleandata/` |
 | `InfiniteDanceData/muq_features_test_infinitedance.tar.gz` | 2.6 GB | extract → `InfiniteDanceData/music/muq_features/test_infinitedance/` |
 | `InfiniteDanceData/musicfeature_55_allmusic_pure.tar.gz` | 3.0 GB | extract → `InfiniteDanceData/music/musicfeature_55_allmusic_pure/` |
@@ -83,26 +87,13 @@ The HF layout mirrors this repo — download into the repo root and extract the 
 
 ```bash
 # from the repo root
-pip install -U "huggingface_hub[cli]"
+pip install -U huggingface_hub
+hf download huuuuuuuuu/InfiniteDance --repo-type model --local-dir . --exclude "README.md" "LICENSE"
+python prepare_release_data.py
 
-# downloads the entire HF repo on top of your local clone — paths match,
-# so files land in the right place automatically
-huggingface-cli download huuuuuuuuu/InfiniteDance \
-    --repo-type model \
-    --local-dir . \
-    --local-dir-use-symlinks False
-
-# extract the release tarballs in place
-cd InfiniteDanceData
-mkdir -p dance music/muq_features
-tar -xzf Infinite_MotionTokens_512x1024_3layer_cleandata.tar.gz -C dance/
-tar -xzf retrieval_s192_l384_style.tar.gz              -C dance/
-tar -xzf alldata_new_joint_vecs264_ft_balanced.tar.gz  -C dance/
-tar -xf test_eval861_joint_vecs264.tar                 -C dance/
-tar -xf infinitedance_smplx_smooth.tar                 -C dance/
-tar -xzf musicfeature_55_allmusic_pure.tar.gz          -C music/
-tar -xzf muq_features_test_infinitedance.tar.gz        -C music/muq_features/
-cd ..
+# Also unpack the training music shards and per-clip style JSONs:
+python prepare_release_data.py --training
+python check_release_data.py --report training_data_check.json
 ```
 
 ### Expected layout after download
@@ -145,7 +136,7 @@ InfiniteDance/
 | Beat-Align (BA) metric | ✅ | needs `musicfeature_55_allmusic_pure` |
 | Retrieval ablations | ✅ | uses `retrieval_s192_l384_style` |
 | **FID-k / FID-m / Div-k / Div-m** | ✅ | precomputed GT kinetic/manual features and canonical split are released; test GT vectors are also included |
-| **Training from scratch** | ✅ with Llama access | motion features/tokens are released; obtain the official Llama-3.2-1B weights from Meta before fresh training |
+| **Training from scratch** | Partial data coverage | available training MuQ and styles are supplied, but the historical lists still contain unavailable paired inputs; run the completeness check below. Official Llama-3.2-1B access is also required |
 | **Per-dance SMPL-X parameters (InfiniteDance clips)** | ✅ | 9,748 project-owned fits in `infinitedance_smplx_smooth/` |
 
 Inference on the released test music uses the faster precomputed
@@ -229,24 +220,60 @@ bash metrics.sh <pred_root> [device_id]
 
 ### 2. Training
 
-Two-stage training (stage 1: bridges + adapters, LLM frozen; stage 2: full fine-tune)
-is run via DDP. The InfiniteDance inference checkpoint contains the Llama
-backbone, but a fresh training run must start from the official Meta
-Llama-3.2-1B weights. Place those files locally and pass `LLAMA_DIR`:
+The two-stage generator freezes the Llama backbone in stage 1 and fine-tunes it
+in stage 2. Fresh training requires the official Meta Llama-3.2-1B weights;
+the released generation checkpoint remains usable for inference.
+
+**The historical training lists are preserved unchanged.** The November 2026
+release audit found entries without matching motion tokens, music, or styles
+in the available source tree. The supplementary MuQ shards contain only
+existing source features; they do not synthesize missing inputs or silently
+redefine a split. `release_training_manifest.json` records each music file's
+shape and SHA-256. `release_source_audit.json` lists the remaining modality gaps.
+A complete original-data training rerun therefore remains pending recovery of
+those source files. The check reports every missing entry and returns nonzero:
+
+```bash
+python check_release_data.py --report training_data_check.json
+```
+
+After all required files are present:
 
 ```bash
 cd All_LargeDanceAR
-
-# Default: 4 GPUs, bf16, with regularization (weight_decay=0.10,
-# llama_dropout=0.15, cond_drop_prob=0.15)
 LLAMA_DIR=/path/to/Llama-3.2-1B DATA_ROOT=../InfiniteDanceData bash train.sh
-
-# Other GPU counts
-GPUS=0,1 WS=2 DATA_ROOT=../InfiniteDanceData bash train.sh
-
-# Warm-start from a previous stage-2 checkpoint
-PREV_CKPT=./output/m2d_llama/<run>/epoch_X_stage2.pt bash train.sh
+# Two GPUs; extra CLI arguments are forwarded to the trainer.
+GPUS=0,1 WS=2 LLAMA_DIR=/path/to/Llama-3.2-1B \
+  DATA_ROOT=../InfiniteDanceData bash train.sh --batch_size 16
 ```
+
+The generator currently reads `All_train.txt` for training and `All_eval.txt`
+for validation, as in the existing training entry. `All_val.txt` is a separate
+historical list and is not substituted for `All_eval.txt`. Per-clip style JSONs
+are read from `styles/Alldata/`; the consolidated style map is used for retrieval.
+Missing required inputs now raise an error instead of silently dropping clips
+or replacing retrieval conditions with zero arrays.
+
+### 2.1 RetrievalNet retraining
+
+The released encoder uses **384 frames**, matching the original
+`alldata_mbr_s100_l384.json`. The old 600-frame configuration did not match the
+released encoder. Both portable dataset configurations now refer to the
+published 384-frame metadata and resolve paths through `INFINITEDANCE_DATA_ROOT`.
+
+```bash
+cd All_LargeDanceAR
+python RetrievalNet/train_release.py \
+  --data-root ../InfiniteDanceData \
+  --output ./output/retrieval_retrain --device cuda:0 --batch-size 256
+```
+
+The entry returns real `(name, audio55, motion264)` batches and trains the
+released architecture. It is a portable retraining recipe, not a claim of
+bitwise replay of the historical checkpoint; all referenced motion/music
+files must exist. A CPU one-step run and loader/configuration regression tests
+were checked during release repair. The original weights and reported metrics
+were not retrained or replaced by that check.
 
 ---
 

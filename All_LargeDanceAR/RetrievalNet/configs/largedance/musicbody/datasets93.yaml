@@ -1,21 +1,21 @@
-# 用于music和22个body joints的retrieval配置文件path
+# Released 384-frame RetrievalNet configuration.
 largedance:
     NAME: largedance_mb
-    audio_dir: '/data1/hzy/AllDataset/musicfeature_55_allmusic_pure'
-    mofea264_dir: '/data1/hzy/HumanMotion/All_mofea/alldata_new_joint_vecs264'
-    meta_paths: '/data1/hzy/HumanMotion/All_mofea/DataSet_Split/alldata_mbr_s100_l384.json'
+    audio_dir: "${INFINITEDANCE_DATA_ROOT}/music/musicfeature_55_allmusic_pure"
+    mofea264_dir: "${INFINITEDANCE_DATA_ROOT}/dance/alldata_new_joint_vecs264_ft_balanced"
+    meta_paths: "${INFINITEDANCE_DATA_ROOT}/partition/alldata_mbr_s100_l384.json"
     split: train
 
 largedance_test:
     NAME: largedance_mb
-    audio_dir: '/data1/hzy/AllDataset/musicfeature_55_allmusic_pure'
-    mofea264_dir: '/data1/hzy/HumanMotion/All_mofea/alldata_new_joint_vecs264'
-    meta_paths: '/data1/hzy/HumanMotion/All_mofea/DataSet_Split/alldata_mbr_s100_l384.json'
+    audio_dir: "${INFINITEDANCE_DATA_ROOT}/music/musicfeature_55_allmusic_pure"
+    mofea264_dir: "${INFINITEDANCE_DATA_ROOT}/dance/alldata_new_joint_vecs264_ft_balanced"
+    meta_paths: "${INFINITEDANCE_DATA_ROOT}/partition/alldata_mbr_s100_l384.json"
     split: test
 
 largedance_all:
     NAME: largedance_mb
-    audio_dir: '/data1/hzy/AllDataset/musicfeature_55_allmusic_pure'
-    mofea264_dir: '/data1/hzy/HumanMotion/All_mofea/alldata_new_joint_vecs264'
-    meta_paths: '/data1/hzy/HumanMotion/All_mofea/DataSet_Split/alldata_mbr_s100_l384.json'
+    audio_dir: "${INFINITEDANCE_DATA_ROOT}/music/musicfeature_55_allmusic_pure"
+    mofea264_dir: "${INFINITEDANCE_DATA_ROOT}/dance/alldata_new_joint_vecs264_ft_balanced"
+    meta_paths: "${INFINITEDANCE_DATA_ROOT}/partition/alldata_mbr_s100_l384.json"
     split: all

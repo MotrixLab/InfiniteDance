@@ -2,6 +2,7 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 import json
+from pathlib import Path
 
 import numpy as np
 import torch
@@ -15,27 +16,22 @@ from transformers import AutoConfig, LlamaForCausalLM
 import numpy as _np
 from utils.get_top10_mofea264 import get_top_mofea_specific_style as _get_top_mofea_specific_style
 
-_RETRIEVAL_PATH_DEFAULT = "../InfiniteDanceData/dance/retrieval_s192_l384_style"
-_MOTION_BASE_DEFAULT = "../InfiniteDanceData/dance/alldata_new_joint_vecs264_ft_balanced"
-_STYLE_MAP_DEFAULT = "../InfiniteDanceData/styles/all_style_map.json"
-
-def get_top10_mofea264(base_name, music_retrieval_idx, style="Popular"):
-    """training-time dance_retrieval_cond getter; falls back to zeros (384,264) on miss."""
-    try:
-        ws, _, _, _, _, _ = _get_top_mofea_specific_style(
-            name=base_name, idx=music_retrieval_idx, style=style,
-            retrieval_path=_RETRIEVAL_PATH_DEFAULT,
-            motion_base=_MOTION_BASE_DEFAULT,
-            style_map_path=_STYLE_MAP_DEFAULT,
-            infertype="infinitedance",
-        )
-        if ws is None:
-            return _np.zeros((384, 264), dtype=_np.float32)
-        if ws.shape[0] < 384:
-            ws = _np.pad(ws, ((0, 384 - ws.shape[0]), (0, 0)), mode='constant')
-        return ws[:384].astype(_np.float32)
-    except Exception:
-        return _np.zeros((384, 264), dtype=_np.float32)
+def get_top10_mofea264(base_name, music_retrieval_idx, style="Popular", data_root=None):
+    """Load the released retrieval condition from the selected dataset root."""
+    root = Path(data_root) if data_root is not None else Path(__file__).resolve().parents[2] / "InfiniteDanceData"
+    ws, _, _, _, _, _ = _get_top_mofea_specific_style(
+        name=base_name, idx=music_retrieval_idx, style=style,
+        retrieval_path=str(root / "dance/retrieval_s192_l384_style"),
+        motion_base=str(root / "dance/alldata_new_joint_vecs264_ft_balanced"),
+        motiontoken_dir=str(root / "dance/Infinite_MotionTokens_512x1024_3layer_cleandata"),
+        style_map_path=str(root / "styles/all_style_map.json"),
+        infertype="infinitedance",
+    )
+    if ws is None:
+        raise ValueError(f"No valid retrieval condition for {base_name}, window {music_retrieval_idx}, style {style}")
+    if ws.shape[0] < 384:
+        ws = _np.pad(ws, ((0, 384 - ws.shape[0]), (0, 0)), mode='constant')
+    return ws[:384].astype(_np.float32)
 from models.motion import get_motion_embeddings, load_vqvae_model
 
 class Music2DanceLlamaModel(nn.Module):
@@ -255,6 +251,7 @@ class MusicDanceDataset:
         self.music_dir = music_dir
         self.dance_dir = dance_dir
         self.style_dir = style_dir
+        self.data_root = Path(data_split_dir).resolve().parent
         self.music_length = music_length
         self.dance_raw_length = dance_length
         self.dance_token_start = dance_token_start
@@ -272,7 +269,7 @@ class MusicDanceDataset:
         split_file = os.path.join(data_split_dir, f"{dancedata}_{split}.txt")
 
         with open(split_file, 'r') as f:
-            base_names = [line.strip() for line in f.readlines()]
+            base_names = [line.strip() for line in f if line.strip()]
 
         self.music_files = []
         self.dance_files = []
@@ -290,8 +287,12 @@ class MusicDanceDataset:
             dance_path = os.path.join(dance_dir, f"{base_name}.npy")
             style_path = os.path.join(style_dir, f"{base_name}.json")
 
-            if not os.path.exists(music_path) or not os.path.exists(dance_path) or not os.path.exists(style_path):
-                continue
+            missing = [p for p in (music_path, dance_path, style_path) if not os.path.isfile(p)]
+            if missing:
+                raise FileNotFoundError(
+                    f"Incomplete training sample {base_name}: {missing}. "
+                    "Run check_release_data.py for a complete missing-file report."
+                )
 
             try:
                 dance_data = np.load(dance_path).squeeze().flatten()
@@ -395,7 +396,7 @@ class MusicDanceDataset:
 
         if self._net is None:
             raise ValueError("VQVAE model not loaded")
-        dance_retrieval_cond = get_top10_mofea264(base_name, music_retrieval_idx, style=genre)
+        dance_retrieval_cond = get_top10_mofea264(base_name, music_retrieval_idx, style=genre, data_root=self.data_root)
 
         music_window = music_data[music_start:music_start + self.music_length]
         dance_window = dance_data[dance_start:dance_start + self.dance_raw_length]

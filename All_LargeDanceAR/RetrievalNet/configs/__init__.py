@@ -1,5 +1,6 @@
 import os
 from typing import Dict
+from pathlib import Path
 
 from yacs.config import CfgNode as CN
 
@@ -38,6 +39,16 @@ def get_config(config_file: str, merge: bool = True) -> CN:
     else:
       cfg = CN(new_allowed=True)
     cfg.merge_from_file(config_file)
+    data_root = str(Path(os.environ.get(
+        "INFINITEDANCE_DATA_ROOT", Path(__file__).resolve().parents[3] / "InfiniteDanceData"
+    )).expanduser().resolve())
+    def resolve_data_paths(node):
+        for key, value in node.items():
+            if isinstance(value, CN):
+                resolve_data_paths(value)
+            elif isinstance(value, str):
+                node[key] = value.replace("${INFINITEDANCE_DATA_ROOT}", data_root)
+    resolve_data_paths(cfg)
     cfg.freeze()
     return cfg
 
