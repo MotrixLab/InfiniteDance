@@ -109,7 +109,11 @@ class Music2DanceLlamaModel(nn.Module):
         self.cond_projection = nn.Linear(retrieval_dance_len, music_len)
 
         self.style_classifier = nn.Linear(llama_hidden_dim, num_styles)
-        self.apply(self._init_weights)
+        # Keep the loaded LLaMA weights (or its own config initialization).
+        # Applying this initializer to self would randomize the backbone too.
+        for name, module in self.named_children():
+            if name != "llama":
+                module.apply(self._init_weights)
 
     def _init_weights(self, module):
         if isinstance(module, (nn.Linear, nn.Embedding)):

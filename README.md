@@ -243,6 +243,11 @@ tests; changing decoding statistics or sample coverage requires a fresh result.
 The two-stage generator freezes the Llama backbone in stage 1 and fine-tunes it
 in stage 2. Fresh training requires the official Meta Llama-3.2-1B weights;
 the released generation checkpoint remains usable for inference.
+Initialization now preserves the loaded backbone and initializes only the
+added modules. The previous recursive initializer overwrote the pretrained
+linear and embedding weights; a regression test reproduces that failure and
+checks that the loaded weights remain identical. Released checkpoints are
+unchanged; this correction applies to new training runs.
 
 The active generator lists contain **10,154 TRAIN and 415 VAL clips** after
 removing 669 TRAIN and 21 VAL entries with missing required files. This is a
